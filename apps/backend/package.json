@@ -19,6 +19,7 @@
     "typescript": "^5.8.2"
   },
   "dependencies": {
+    "@langchain/core": "^0.3.42",
     "@prisma/client": "^6.5.0",
     "@types/express": "^5.0.1",
     "@types/helmet": "^4.0.0",
