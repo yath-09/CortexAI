@@ -3,7 +3,7 @@
 export default function Home() {
   return (
     <div>
-      <main>
+      <main className="text-3xl">
          Hello Next
       </main>
     </div>

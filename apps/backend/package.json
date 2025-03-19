@@ -3,18 +3,27 @@
   "module": "index.ts",
   "type": "module",
   "scripts": {
-     "start": "bun run index.ts",
+    "start": "bun run index.ts",
     "dev": "nodemon --exec bun run index.ts"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/cors": "^2.8.17",
+    "@types/node": "^22.13.10",
+    "prisma": "^6.5.0"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@prisma/client": "^6.5.0",
     "@types/express": "^5.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "nodemon": "^3.1.9"
+    "langchain": "^0.3.19",
+    "nodemon": "^3.1.9",
+    "openai": "^4.87.3",
+    "pg": "^8.14.0"
   }
 }
