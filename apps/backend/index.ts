@@ -3,8 +3,8 @@
 import express from "express";
 import dotenv from "dotenv";
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
-import { initPinecone } from "./src/pinecone";
-import { createDocumentRoutes } from "./src/documentRoutes";
+import { initPinecone } from "./src/services/pinecone";
+import { createDocumentRoutes } from "./src/routes/documentRoutes";
 import cors from "cors";
 import helmet from "helmet";
 

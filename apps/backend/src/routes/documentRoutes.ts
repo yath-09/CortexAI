@@ -1,6 +1,6 @@
 import express from 'express';
 import multer from 'multer';
-import { DocumentController } from '../src/documentController';
+import { DocumentController } from '../controller/documentController';
 
 // Configure multer for memory storage with better error handling
 const upload = multer({ 

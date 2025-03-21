@@ -2,7 +2,7 @@
 
 import { Request, Response } from 'express';
 import { OpenAIEmbeddings } from "@langchain/openai";
-import { PDFProcessingService } from '../src/pdfService';
+import { PDFProcessingService } from '../services/pdfService';
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import crypto from 'crypto';
 import {prismaClient} from "db"
