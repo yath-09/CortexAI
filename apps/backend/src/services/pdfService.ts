@@ -5,7 +5,7 @@ import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import crypto from 'crypto';
 import { prismaClient } from "db";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 export class PDFProcessingService {
   private embeddings: OpenAIEmbeddings;
@@ -65,6 +65,30 @@ export class PDFProcessingService {
       throw error;
     }
   }
+  
+   /**
+   * Delete file from S3
+   * @param bucket - S3 bucket name
+   * @param key - S3 object key
+   * @returns Success status
+   */
+   async deleteFromS3(bucket: string, key: string): Promise<boolean> {
+    try {
+      const command = new DeleteObjectCommand({
+        Bucket: bucket,
+        Key: key
+      });
+      
+      await this.s3Client.send(command);
+      console.log(`Deleted file from S3: ${key}`);
+      return true;
+    } catch (error) {
+      console.error(`Error deleting file from S3 (${bucket}/${key}):`, error);
+      throw error;
+    }
+  }
+
+
 
   /**
    * Save PDF file to disk temporarily (for processing)
@@ -150,8 +174,8 @@ export class PDFProcessingService {
       console.log(`Split PDF into ${chunks.length} chunks`);
       
       // 8. Get the index from Pinecone
-      const index = pineconeClient.Index(process.env.PINECONE_INDEX!);
-      
+      const index = pineconeClient.index(process.env.PINECONE_INDEX!);
+      const namespace = index.namespace(document.pineconeNamespace);
       // 9. Process each chunk and store in Pinecone (not in PostgreSQL)
       const vectors = [];
       
@@ -186,7 +210,8 @@ export class PDFProcessingService {
       }
       
       // Batch upsert to Pinecone
-      await index.upsert(vectors,document.pineconeNamespace);
+      //await index.upsert(vectors,document.pineconeNamespace);
+      await namespace.upsert(vectors);
       
       // 10. Update document with chunk count
       await prismaClient.document.update({
