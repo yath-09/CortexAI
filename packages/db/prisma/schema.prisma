@@ -1,43 +1,61 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// prisma/schema.prisma
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql" // Change to your database provider if different
+  provider = "postgresql" // Can be changed to your preferred database
   url      = env("DATABASE_URL")
 }
 
-model KnowledgeBase {
+// Main documents table to track uploaded documents
+model Document {
   id          String   @id @default(uuid())
-  content     String   @db.Text
-  contentType String   // "text" or "pdf"
+  title       String?  // Optional document title
+  filename    String?  // Original filename for uploaded documents
+  contentType String   // "text" or "pdf" or other types
   metadata    Json     @default("{}")
-  embeddingId String   @unique // ID reference in Pinecone
+  chunks      DocumentChunk[] // Relation to chunks
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  @@index([contentType])
-  @@map("knowledge_base")
+  @@map("documents")
 }
 
+// Document chunks for storing segments of text or PDF content
+model DocumentChunk {
+  id          String   @id // Using the same ID as in Pinecone for easy reference
+  content     String   @db.Text // The actual text content of this chunk
+  contentType String   // "text" or "pdf" or other types
+  metadata    Json     @default("{}") // Additional metadata
+  documentId  String   // Reference to parent document
+  embeddingId String   @unique // ID reference in Pinecone
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relation to parent document
+  document    Document? @relation(fields: [documentId], references: [id])
+
+  @@index([contentType])
+  @@index([documentId])
+  @@map("document_chunks")
+}
+
+// For tracking chat history
 model ChatHistory {
   id        String   @id @default(uuid())
-  userId    String?
-  sessionId String
-  query     String   @db.Text
-  response  String   @db.Text
+  userId    String?  // Optional user ID if authentication is implemented
+  sessionId String   // Session identifier
+  query     String   @db.Text // User's question
+  response  String   @db.Text // System's response
   createdAt DateTime @default(now())
 
   @@index([userId, sessionId])
   @@map("chat_history")
 }
 
+// Users table if authentication is needed
 model User {
   id        String   @id @default(uuid())
   email     String   @unique
