@@ -5,20 +5,69 @@ import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import crypto from 'crypto';
 import { prismaClient } from "db";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 export class PDFProcessingService {
   private embeddings: OpenAIEmbeddings;
+  private s3Client: S3Client;
   
   constructor() {
-    // Initialize OpenAI embeddings with API key from environment variables
+    // Initialize OpenAI embeddings
     this.embeddings = new OpenAIEmbeddings({
       apiKey: process.env.OPENAI_API_KEY!,
       modelName: "text-embedding-ada-002",
     });
+    
+    // Initialize S3 client
+    this.s3Client = new S3Client({
+      region: process.env.AWS_REGION || 'us-east-1',
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!
+      }
+    });
   }
 
   /**
-   * Save PDF file to disk temporarily
+   * Upload file to S3
+   * @param buffer - File buffer
+   * @param filename - Original filename
+   * @returns S3 storage information
+   */
+  async uploadToS3(buffer: Buffer, filename: string): Promise<{key: string, bucket: string, region: string}> {
+    const bucket = process.env.S3_BUCKET_NAME!;
+    const region = process.env.AWS_REGION || 'ap-south-1';
+    
+    // Create a unique object key to prevent collisions
+    const uniqueId = crypto.randomBytes(8).toString('hex');
+    const sanitizedFilename = filename.replace(/[^a-zA-Z0-9.]/g, '_');
+    const key = `documents/${uniqueId}-${sanitizedFilename}`;
+    
+    // Upload to S3
+    try {
+      const command = new PutObjectCommand({
+        Bucket: bucket,
+        Key: key,
+        Body: buffer,
+        ContentType: 'application/pdf'
+      });
+      
+      await this.s3Client.send(command);
+      console.log(`Uploaded file to S3: ${key}`);
+      
+      return {
+        key,
+        bucket,
+        region
+      };
+    } catch (error) {
+      console.error('Error uploading to S3:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Save PDF file to disk temporarily (for processing)
    * @param buffer - PDF file buffer
    * @param filename - Original filename
    * @returns Path to saved file
@@ -45,53 +94,67 @@ export class PDFProcessingService {
   }
 
   /**
-   * Process PDF file, extract text, split into chunks and embed
-   * @param filePath - Path to the PDF file
+   * Process PDF file, extract text, split into chunks, embed, and store in S3
+   * @param buffer - PDF file buffer
+   * @param filename - Original filename
    * @param pineconeClient - Initialized Pinecone client
-   * @param metadata - Additional metadata to store with chunks
-   * @returns Results of the processing operation
+   * @param metadata - Additional metadata
+   * @returns Processing results
    */
-  async processPDF(filePath: string, pineconeClient: any, metadata: Record<string, any> = {}): Promise<any> {
+  async processPDF(
+    buffer: Buffer, 
+    filename: string, 
+    pineconeClient: any, 
+    metadata: Record<string, any> = {}
+  ): Promise<any> {
+    let filePath = '';
+    
     try {
-      // Get base filename for reference
-      const baseFilename = path.basename(filePath);
+      // 1. Upload to S3
+      const s3Info = await this.uploadToS3(buffer, filename);
       
-      // First, create a Document record in the database
+      // 2. Save temporarily for processing
+      filePath = await this.savePDFToDisk(buffer, filename);
+      
+      // 3. Create document record in database
       const document = await prismaClient.document.create({
         data: {
-          title: metadata.title || baseFilename,
-          filename: baseFilename, 
+          title: metadata.title || filename,
+          filename: filename,
           contentType: 'pdf',
+          s3Key: s3Info.key,
+          s3Bucket: s3Info.bucket,
+          s3Region: s3Info.region,
+          pineconeNamespace: `doc-${crypto.randomBytes(8).toString('hex')}`,
           metadata: metadata
         }
       });
       
       console.log(`Created document record with ID: ${document.id}`);
       
-      // Load PDF document using LangChain's PDFLoader
+      // 4. Load PDF and extract text
       const loader = new PDFLoader(filePath);
       const docs = await loader.load();
       
-      // Combine all pages into one text if needed
+      // 5. Combine all pages into one text
       const allText = docs.map(doc => doc.pageContent).join('\n');
       
-      // Create a text splitter with specific configuration
+      // 6. Create a text splitter
       const textSplitter = new RecursiveCharacterTextSplitter({
-        chunkSize: 1000, // Size of each chunk in characters
-        chunkOverlap: 200, // Overlap between chunks to maintain context
+        chunkSize: 1000,
+        chunkOverlap: 200,
       });
       
-      // Split the text into chunks
+      // 7. Split the text into chunks
       const chunks = await textSplitter.createDocuments([allText]);
       console.log(`Split PDF into ${chunks.length} chunks`);
       
-      // Get the index from Pinecone
+      // 8. Get the index from Pinecone
       const index = pineconeClient.Index(process.env.PINECONE_INDEX!);
       
-      // Store each chunk in database and Pinecone
-      const storedChunks = [];
+      // 9. Process each chunk and store in Pinecone (not in PostgreSQL)
+      const vectors = [];
       
-      // Process each chunk
       for (let i = 0; i < chunks.length; i++) {
         const chunk = chunks[i];
         
@@ -101,56 +164,56 @@ export class PDFProcessingService {
         // Create embeddings for the chunk
         const vector = await this.embeddings.embedQuery(chunk.pageContent);
         
-        // Create enhanced metadata
+        // Create metadata for Pinecone
         const chunkMetadata = {
           ...metadata,
-          source: baseFilename,
           documentId: document.id,
+          source: filename,
+          s3Key: s3Info.key,
+          s3Bucket: s3Info.bucket,
           chunkIndex: i,
           totalChunks: chunks.length,
           type: 'pdf',
-          text: chunk.pageContent, // Store the original text in metadata
+          text: chunk.pageContent,
         };
         
         // Store vector in Pinecone
-        await index.upsert([{
+        vectors.push({
           id: chunkId,
           values: vector,
           metadata: chunkMetadata
-        }]);
-        
-        // Store reference in database using Prisma
-        const dbEntry = await prismaClient.documentChunk.create({
-          data: {
-            id: chunkId,
-            content: chunk.pageContent,
-            contentType: 'pdf',
-            metadata: chunkMetadata,
-            documentId: document.id, // Use the actual Document ID
-            embeddingId: chunkId, // Same as the Pinecone ID
-          }
         });
-        
-        storedChunks.push(dbEntry);
       }
       
-      // Clean up the temporary file
+      // Batch upsert to Pinecone
+      await index.upsert(vectors,document.pineconeNamespace);
+      
+      // 10. Update document with chunk count
+      await prismaClient.document.update({
+        where: { id: document.id },
+        data: { chunkCount: chunks.length }
+      });
+      
+      // 11. Clean up the temporary file
       await fs.promises.unlink(filePath);
       
       return {
         success: true,
         message: `PDF processed and split into ${chunks.length} chunks`,
-        chunks: storedChunks.length,
-        documentId: document.id
+        documentId: document.id,
+        s3Key: s3Info.key,
+        s3Url: `https://${s3Info.bucket}.s3.${s3Info.region}.amazonaws.com/${s3Info.key}`
       };
     } catch (error: any) {
       console.error("Error processing PDF:", error);
       
-      // Try to clean up the file even if processing failed
-      try {
-        await fs.promises.unlink(filePath);
-      } catch (unlinkError) {
-        console.error("Failed to clean up temporary file:", unlinkError);
+      // Try to clean up the temporary file if it exists
+      if (filePath) {
+        try {
+          await fs.promises.unlink(filePath);
+        } catch (unlinkError) {
+          console.error("Failed to clean up temporary file:", unlinkError);
+        }
       }
       
       return {

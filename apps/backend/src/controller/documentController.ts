@@ -79,18 +79,18 @@ export class DocumentController {
         }]);
         
         // Store reference in database using Prisma
-        const dbEntry = await prismaClient.documentChunk.create({
-          data: {
-            id: chunkId,
-            content: chunk.pageContent,
-            contentType: 'text',
-            metadata: chunkMetadata,
-            documentId: id, // Group chunks by original document ID
-            embeddingId: chunkId, // Same as the Pinecone ID
-          }
-        });
+        // const dbEntry = await prismaClient.documentChunk.create({
+        //   data: {
+        //     id: chunkId,
+        //     content: chunk.pageContent,
+        //     contentType: 'text',
+        //     metadata: chunkMetadata,
+        //     documentId: id, // Group chunks by original document ID
+        //     embeddingId: chunkId, // Same as the Pinecone ID
+        //   }
+        // });
         
-        storedChunks.push(dbEntry);
+        // storedChunks.push(dbEntry);
       }
       
       return res.json({
@@ -113,6 +113,9 @@ export class DocumentController {
    * Handle PDF file uploads
    * Processes the PDF, extracts text, splits into chunks, and embeds each chunk
    */
+  /**
+   * Handle PDF upload
+   */
   async uploadPDF(req: Request, res: Response, pineconeClient: any) {
     try {
       // Check if file was uploaded
@@ -122,33 +125,24 @@ export class DocumentController {
       
       // Check if Pinecone client is initialized
       if (!pineconeClient) {
-        return res.status(503).json({ error: "Database not yet initialized" });
+        return res.status(503).json({ error: "Vector database not yet initialized" });
       }
       
-      // Extract metadata from the request body - handle potential parsing errors
+      // Extract metadata from the request body
       let metadata = {};
       try {
         metadata = req.body.metadata ? JSON.parse(req.body.metadata) : {};
       } catch (parseError) {
         console.warn("Error parsing metadata JSON:", parseError);
-        // Continue with empty metadata rather than failing the whole request
       }
       
-      // Log file information for debugging
-      console.log("Processing file:", {
-        originalname: req.file.originalname,
-        mimetype: req.file.mimetype,
-        size: req.file.size
-      });
-      
-      // Save the uploaded file temporarily
-      const filePath = await pdfService.savePDFToDisk(
+      // Process the PDF file directly with the buffer
+      const result = await pdfService.processPDF(
         req.file.buffer,
-        req.file.originalname
+        req.file.originalname,
+        pineconeClient,
+        metadata
       );
-      
-      // Process the PDF file
-      const result = await pdfService.processPDF(filePath, pineconeClient, metadata);
       
       if (result.success) {
         return res.json(result);
@@ -161,6 +155,96 @@ export class DocumentController {
         success: false,
         error: error.message,
         message: "Failed to process PDF upload" 
+      });
+    }
+  }
+
+  /**
+   * Get a list of all documents
+   */
+  async getAllDocuments(req: Request, res: Response) {
+    try {
+      const documents = await prismaClient.document.findMany({
+        orderBy: { createdAt: 'desc' }
+      });
+      
+      return res.json({ documents });
+    } catch (error: any) {
+      console.error("Error fetching documents:", error);
+      return res.status(500).json({ 
+        success: false,
+        error: error.message 
+      });
+    }
+  }
+
+  /**
+   * Get a single document by ID
+   */
+  async getDocumentById(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      
+      const document = await prismaClient.document.findUnique({
+        where: { id }
+      });
+      
+      if (!document) {
+        return res.status(404).json({ error: "Document not found" });
+      }
+      
+      return res.json({ document });
+    } catch (error: any) {
+      console.error("Error fetching document:", error);
+      return res.status(500).json({ 
+        success: false,
+        error: error.message 
+      });
+    }
+  }
+  
+  /**
+   * Delete a document and its associated data
+   */
+  async deleteDocument(req: Request, res: Response, pineconeClient: any) {
+    try {
+      const { id } = req.params;
+      
+      // Get the document
+      const document = await prismaClient.document.findUnique({
+        where: { id }
+      });
+      
+      if (!document) {
+        return res.status(404).json({ error: "Document not found" });
+      }
+      
+      // Delete vectors from Pinecone if namespace exists
+      if (document.pineconeNamespace && pineconeClient) {
+        const index = pineconeClient.Index(process.env.PINECONE_INDEX!);
+        await index.delete1({
+          namespace: document.pineconeNamespace,
+          deleteAll: true
+        });
+      }
+      
+      // Delete document from database
+      await prismaClient.document.delete({
+        where: { id }
+      });
+      
+      // Optional: Delete from S3 (requires additional implementation)
+      // await this.deleteFromS3(document.s3Bucket, document.s3Key);
+      
+      return res.json({ 
+        success: true,
+        message: "Document and associated data deleted successfully" 
+      });
+    } catch (error: any) {
+      console.error("Error deleting document:", error);
+      return res.status(500).json({ 
+        success: false,
+        error: error.message 
       });
     }
   }

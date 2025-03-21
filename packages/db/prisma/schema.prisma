@@ -1,11 +1,9 @@
-// prisma/schema.prisma
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql" // Can be changed to your preferred database
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -15,31 +13,17 @@ model Document {
   title       String?  // Optional document title
   filename    String?  // Original filename for uploaded documents
   contentType String   // "text" or "pdf" or other types
+  s3Key       String?  // S3 storage key/path
+  s3Bucket    String?  // S3 bucket name
+  s3Region    String?  // S3 region
+  pineconeNamespace String? // Namespace in Pinecone where chunks are stored
+  chunkCount  Int      @default(0) // Number of chunks this document was split into
   metadata    Json     @default("{}")
-  chunks      DocumentChunk[] // Relation to chunks
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
-  @@map("documents")
-}
-
-// Document chunks for storing segments of text or PDF content
-model DocumentChunk {
-  id          String   @id // Using the same ID as in Pinecone for easy reference
-  content     String   @db.Text // The actual text content of this chunk
-  contentType String   // "text" or "pdf" or other types
-  metadata    Json     @default("{}") // Additional metadata
-  documentId  String   // Reference to parent document
-  embeddingId String   @unique // ID reference in Pinecone
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  // Relation to parent document
-  document    Document? @relation(fields: [documentId], references: [id])
 
   @@index([contentType])
-  @@index([documentId])
-  @@map("document_chunks")
+  @@map("documents")
 }
 
 // For tracking chat history
