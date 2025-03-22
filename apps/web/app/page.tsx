@@ -1,6 +1,3 @@
-import { ContainerScroll } from "./components/ui/compentsScroll";
-
-
 export default function Home() {
   return (
     <div>
