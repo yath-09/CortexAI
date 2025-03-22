@@ -1,11 +1,11 @@
-// src/services/queryService.ts
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { ChatOpenAI } from "@langchain/openai";
-
+import { Response } from "express";
 
 export class QueryService {
     private embeddings: OpenAIEmbeddings;
     private openai: ChatOpenAI;
+    private streamingOpenai: ChatOpenAI;
     private pineconeClient: any;
     private indexName: string;
 
@@ -17,10 +17,17 @@ export class QueryService {
             modelName: "text-embedding-ada-002",
         });
 
-        // Initialize OpenAI chat model
+        // Initialize OpenAI chat model (non-streaming)
         this.openai = new ChatOpenAI({
             apiKey: process.env.OPENAI_API_KEY!,
             modelName: "gpt-4-turbo",
+        });
+
+        // Initialize OpenAI chat model (streaming)
+        this.streamingOpenai = new ChatOpenAI({
+            apiKey: process.env.OPENAI_API_KEY!,
+            modelName: "gpt-4-turbo",
+            streaming: true,
         });
 
         this.pineconeClient = pineconeClient;
@@ -36,9 +43,10 @@ export class QueryService {
         }
 
         const vector = await this.embeddings.embedQuery(text);
-        const index = this.pineconeClient.Index(this.indexName).namespace("pdfchatbot"); //napespace to be deofned is imp here for searching purposes
+        const index = this.pineconeClient.Index(this.indexName);
+        const namespace = index.namespace("pdfchatbot"); // Namespace for searching
 
-        const queryResponse = await index.query({
+        const queryResponse = await namespace.query({
             vector,
             topK,
             includeMetadata: true,
@@ -48,7 +56,7 @@ export class QueryService {
     }
 
     /**
-     * Process a chat query by retrieving context and generating a response
+     * Process a chat query by retrieving context and generating a response (non-streaming)
      */
     async processChat(query: string): Promise<string> {
         // Get relevant context from vector database
@@ -66,7 +74,89 @@ export class QueryService {
             .join("\n\n");
 
         // Prepare a detailed system prompt for better responses
-        const systemPrompt = `
+        const systemPrompt = this.getSystemPrompt();
+
+        // Use the correct format for calling the chat model
+        const aiResponse = await this.openai.invoke([
+            { role: "system", content: systemPrompt },
+            { role: "user", content: `Context Information:\n\n${relevantChunks}\n\nUser Question: ${query}\n\nProvide a clear, direct answer based only on the context above.` }
+        ]);
+
+        return aiResponse.content as string;
+    }
+
+    /**
+     * Process a chat query with streaming response
+     */
+    async processChatStream(query: string, res: Response): Promise<void> {
+        try {
+            // Send status update
+            //res.write(`data: ${JSON.stringify({ type: 'status', content: 'Searching for relevant information...' })}\n\n`);
+
+            // Get relevant context from vector database
+            const matches = await this.queryEmbeddings(query, 5);
+
+            // Check if matches were found
+            if (!matches || matches.length === 0) {
+                res.write(`data: ${JSON.stringify({
+                    type: 'content',
+                    content: "I don't have enough information to answer that question."
+                })}\n\n`);
+                return;
+            }
+
+            // Extract text from metadata
+            const relevantChunks = matches
+                .filter((match: any) => match.metadata && match.metadata.text)
+                .map((match: any) => match.metadata.text)
+                .join("\n\n");
+
+            // Send status update
+            res.write(`data: ${JSON.stringify({
+                type: 'status',
+                content: 'Found relevant information. Generating response...'
+            })}\n\n`);
+
+            // Prepare system prompt
+            const systemPrompt = this.getSystemPrompt();
+
+            // Use the streaming version of the chat model
+            const userMessage = `Context Information:\n\n${relevantChunks}\n\nUser Question: ${query}\n\nProvide a clear, direct answer based only on the context above.`;
+
+            let responseText = '';
+
+            // Stream the response
+            await this.streamingOpenai.invoke(
+                [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: userMessage }
+                ],
+                {
+                    callbacks: [
+                        {
+                            handleLLMNewToken(token: string) {
+                                responseText += token;
+                                res.write(`data: ${JSON.stringify({ type: 'token', content: token })}\n\n`);
+                            },
+                        },
+                    ],
+                }
+            );
+
+            // Send the full response at the end as well (can be useful for client-side processing)
+            res.write(`data: ${JSON.stringify({ type: 'fullContent', content: responseText })}\n\n`);
+
+        } catch (error: any) {
+            console.error("Error in streaming chat:", error);
+            res.write(`data: ${JSON.stringify({ type: 'error', content: error.message })}\n\n`);
+        }
+    }
+
+    /**
+     * Get the system prompt for better responses
+     */
+    private getSystemPrompt(): string {
+        return `
 You are a helpful assistant that answers questions based on the user's documents.
 
 Guidelines:
@@ -78,13 +168,5 @@ Guidelines:
 - Format responses for readability when appropriate
 - Cite specific policies or procedures when available in the context
 `;
-
-        // Use the correct format for calling the chat model
-        const aiResponse = await this.openai.invoke([
-            { role: "system", content: systemPrompt },
-            { role: "user", content: `Context Information:\n\n${relevantChunks}\n\nUser Question: ${query}\n\nProvide a clear, direct answer based only on the context above.` }
-        ]);
-
-        return aiResponse.content as string;
     }
 }
