@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { UploadCloud, FileText, AlertCircle, CheckCircle } from 'lucide-react';
+import { BASE_URL } from '../../config';
 
 export default function PdfUpload() {
   const [file, setFile] = useState<File | null>(null);
@@ -82,7 +83,7 @@ export default function PdfUpload() {
       }, 400);
 
       // Call the API
-      const response = await fetch('http://localhost:8080/api/documents/upload-pdf', {
+      const response = await fetch(`${BASE_URL}/api/documents/upload-pdf`, {
         method: 'POST',
         body: formData,
       });

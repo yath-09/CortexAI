@@ -9,6 +9,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { MdDelete } from "react-icons/md";
 import { IoSend } from "react-icons/io5";
 import { IoIosRefresh } from "react-icons/io";
+import { BASE_URL } from '../../config';
 
 const SparklesIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -75,7 +76,7 @@ export default function ChatInterface() {
       // Set a timeout to abort if taking too long
       const timeoutId = setTimeout(() => controller.abort(), 30000);
       
-      const response = await fetch('http://localhost:8080/api/chat/stream', {
+      const response = await fetch(`${BASE_URL}/api/chat/stream`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

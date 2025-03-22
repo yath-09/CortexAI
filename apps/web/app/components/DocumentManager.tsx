@@ -15,6 +15,7 @@ import {
     X,
     Loader
 } from 'lucide-react';
+import { BASE_URL } from '../../config';
 
 // Document type definition
 interface Document {
@@ -90,7 +91,7 @@ export default function DocumentManager() {
                 ...(searchTerm && { search: searchTerm })
             });
 
-            const response = await fetch(`http://localhost:8080/api/documents/documents?${queryParams.toString()}`);
+            const response = await fetch(`${BASE_URL}/api/documents/documents?${queryParams.toString()}`);
 
             if (!response.ok) {
                 throw new Error('Failed to fetch documents');
@@ -125,7 +126,7 @@ export default function DocumentManager() {
         setError(null);
 
         try {
-            const response = await fetch(`http://localhost:8080/api/documents/documents/${documentId}`);
+            const response = await fetch(`${BASE_URL}/api/documents/documents/${documentId}`);
 
             if (!response.ok) {
                 throw new Error('Failed to fetch document details');
@@ -150,7 +151,7 @@ export default function DocumentManager() {
         setError(null);
 
         try {
-            const response = await fetch(`http://localhost:8080/api/documents/documents/${documentToDelete}`, {
+            const response = await fetch(`${BASE_URL}/api/documents/documents/${documentToDelete}`, {
                 method: 'DELETE',
             });
 
