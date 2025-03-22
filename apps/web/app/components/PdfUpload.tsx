@@ -122,7 +122,7 @@ export default function PdfUpload() {
   return (
     <div className="w-full max-w-2xl mx-auto px-4">
       <div className="bg-slate-800 bg-opacity-50 backdrop-blur-sm rounded-lg p-6 shadow-xl border border-slate-700">
-        <h2 className="text-2xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-cyan-400">Upload Document</h2>
+        <h2 className="text-3xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-cyan-400">Upload Document</h2>
         
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* File Upload Area */}
