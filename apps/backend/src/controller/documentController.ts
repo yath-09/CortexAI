@@ -286,6 +286,7 @@ export class DocumentController {
           s3Key: true,
           s3Bucket: true,
           s3Region: true,
+          chunkCount: true
         }
       });
 
@@ -299,20 +300,37 @@ export class DocumentController {
       // 1. Delete from Pinecone if namespace exists
       if (document.pineconeNamespace && pineconeClient) {
         try {
-          const pineconeIndex = pineconeClient.index(process.env.PINECONE_INDEX!);
-          // Check if namespace exists before attempting to delete
-          const namespaces = await pineconeIndex.describeIndexStats();
-          const namespaceExists = namespaces.namespaces && document.pineconeNamespace in namespaces.namespaces;
+          // Make sure we have a valid index name from environment variables
+          const indexName = process.env.PINECONE_INDEX;
 
-          if (namespaceExists) {
-            deleteOperations.push(
-              pineconeIndex
-                .namespace(document.pineconeNamespace)
-                .deleteAll()
-            );
-            
+          if (!indexName) {
+            console.error("Missing PINECONE_INDEX environment variable");
           } else {
-            console.log(`Namespace ${document.pineconeNamespace} not found in Pinecone, skipping vector deletion`);
+            // Get the index
+            const index = pineconeClient.index(indexName);
+
+            // Get the namespace
+            const namespace = index.namespace(document.pineconeNamespace);
+
+            try {
+              const maxChunks = document.chunkCount; // This should be set to a reasonable maximum for your app
+              let vectorIds = [];
+
+              for (let i = 0; i < maxChunks; i++) {
+                vectorIds.push(`pdf-${document.id}-chunk-${i}`);
+              }
+              console.log(`No vector query capability, attempting to delete up to ${maxChunks} chunks using pattern`);
+              // Delete vectors in batches of 100 to avoid overloading Pinecone
+              const batchSize = 100;
+              for (let i = 0; i < vectorIds.length; i += batchSize) {
+                const batch = vectorIds.slice(i, i + batchSize);
+                deleteOperations.push(namespace.deleteMany(batch));
+              }
+
+              console.log(`Scheduled deletion of ${vectorIds.length} vectors for document ${id}`);
+            } catch (vectorError) {
+              console.error("Error finding/deleting vectors:", vectorError);
+            }
           }
         } catch (pineconeError) {
           // Log but continue with other deletions

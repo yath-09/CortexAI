@@ -149,7 +149,7 @@ export class PDFProcessingService {
           s3Key: s3Info.key,
           s3Bucket: s3Info.bucket,
           s3Region: s3Info.region,
-          pineconeNamespace: `doc-${crypto.randomBytes(8).toString('hex')}`,
+          pineconeNamespace: `pdfchatbot`,//this can be segmented onto diff users and diff id's further when we add the data this is imp point
           metadata: metadata
         }
       });
@@ -183,7 +183,7 @@ export class PDFProcessingService {
         const chunk = chunks[i];
         
         // Generate a unique ID for this chunk
-        const chunkId = `pdf-${document.id}-chunk-${i}-${crypto.randomBytes(4).toString('hex')}`;
+        const chunkId = `pdf-${document.id}-chunk-${i}`;
         
         // Create embeddings for the chunk
         const vector = await this.embeddings.embedQuery(chunk.pageContent);
