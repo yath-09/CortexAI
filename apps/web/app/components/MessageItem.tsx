@@ -16,21 +16,21 @@ interface MessageItemProps {
 const formatTimeAgo = (date: Date): string => {
   const now = new Date();
   const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-  
+
   if (seconds < 60) return 'just now';
-  
+
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
-  
+
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
-  
+
   const days = Math.floor(hours / 24);
   if (days < 30) return `${days} day${days !== 1 ? 's' : ''} ago`;
-  
+
   const months = Math.floor(days / 30);
   if (months < 12) return `${months} month${months !== 1 ? 's' : ''} ago`;
-  
+
   const years = Math.floor(months / 12);
   return `${years} year${years !== 1 ? 's' : ''} ago`;
 };
@@ -49,11 +49,11 @@ const SimpleMarkdown = ({ content }: { content: string }) => {
       if (match.index > lastIndex) {
         parts.push(<span key={`text-${lastIndex}`}>{processInlineFormatting(text.slice(lastIndex, match.index))}</span>);
       }
-      
+
       // Add code block
       const language = match[1] || 'text';
       const code = match[2];
-      
+
       parts.push(
         <div key={`code-${match.index}`} className="rounded-md border border-slate-700 my-4 bg-slate-950 overflow-auto">
           <div className="px-3 py-1 border-b border-slate-700 bg-slate-900 text-xs text-slate-400">
@@ -64,15 +64,15 @@ const SimpleMarkdown = ({ content }: { content: string }) => {
           </pre>
         </div>
       );
-      
+
       lastIndex = match.index + match[0].length;
     }
-    
+
     // Add remaining text
     if (lastIndex < text.length) {
       parts.push(<span key={`text-${lastIndex}`}>{processInlineFormatting(text.slice(lastIndex))}</span>);
     }
-    
+
     return parts.length > 0 ? parts : [<span key="empty">{text}</span>];
   };
 
@@ -82,7 +82,7 @@ const SimpleMarkdown = ({ content }: { content: string }) => {
     const withLineBreaks = text.split('\n').map((line, i) => (
       i === 0 ? line : [<br key={`br-${i}`} />, line]
     ));
-    
+
     // Process and return as React elements
     return withLineBreaks;
   };
@@ -110,22 +110,23 @@ const MessageItem = ({ message }: MessageItemProps) => {
       {/* Message content */}
       <div className={cn(
         "relative max-w-3xl rounded-xl px-4 py-3 text-sm",
-        isUser 
-          ? "bg-gradient-to-r from-indigo-600 to-indigo-700 text-white" 
-          : isError 
-            ? "bg-red-500/10 border border-red-500/20 text-white" 
+        isUser
+          ? "bg-gradient-to-r from-indigo-600 to-indigo-700 text-white"
+          : isError
+            ? "bg-red-500/10 border border-red-500/20 text-white"
             : "bg-slate-800 border border-slate-700 text-slate-200"
       )}>
         {/* Loading indicator */}
         {isLoading && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="absolute -bottom-1 left-4"
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 flex justify-center w-full"
           >
             <LoadingDots />
           </motion.div>
         )}
+
 
         {/* Error indicator */}
         {isError && (

@@ -24,14 +24,33 @@ export default function ChatInterface() {
   const [isFocused, setIsFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auto-scroll to bottom when messages change
+  
+  // Only auto-scroll if user is already at the bottom
+  // Inside ChatInterface.tsx
+  // Replace the existing useEffect for scrolling with this:
+
+  // Auto-scroll only happens within the chat container, not the whole page
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Check if we should scroll
+    const shouldScroll = messages.length > 0 && messages[messages.length - 1].status === 'loading';
+
+    if (shouldScroll && messagesEndRef.current) {
+      // Use scrollIntoView but only within the container
+      messagesEndRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'end',
+        inline: 'nearest'
+      });
+    }
   }, [messages]);
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Prevent scroll to bottom of page when submitting
+  if (e.target && 'blur' in e.target) {
+    (e.target as HTMLElement).blur();
+  }
     if (!input.trim() || isLoading) return;
 
     const userMessage = input.trim();
@@ -72,10 +91,10 @@ export default function ChatInterface() {
       // Create an AbortController to be able to cancel the fetch if needed
       const controller = new AbortController();
       const signal = controller.signal;
-      
+
       // Set a timeout to abort if taking too long
       const timeoutId = setTimeout(() => controller.abort(), 30000);
-      
+
       const response = await fetch(`${BASE_URL}/api/chat/stream`, {
         method: 'POST',
         headers: {
@@ -102,11 +121,11 @@ export default function ChatInterface() {
       const decoder = new TextDecoder('utf-8');
       let buffer = '';
       let responseContent = '';
-      
+
       // Process the stream
       while (true) {
         const { done, value } = await reader.read();
-        
+
         if (done) {
           // Handle any remaining data in the buffer
           if (buffer.trim()) {
@@ -116,23 +135,23 @@ export default function ChatInterface() {
               console.error('Error handling final buffer chunk:', e);
             }
           }
-          
+
           // Final update
-          updateMessage(messageId, { 
+          updateMessage(messageId, {
             content: responseContent,
-            status: 'complete' 
+            status: 'complete'
           });
           break;
         }
-        
+
         // Decode the chunk and add to buffer
         const chunk = decoder.decode(value, { stream: true });
         buffer += chunk;
-        
+
         // Process complete SSE messages in the buffer
         const lines = buffer.split('\n\n');
         buffer = lines.pop() || ''; // Keep the last incomplete chunk in the buffer
-        
+
         // Process each complete SSE message
         for (const line of lines) {
           try {
@@ -148,7 +167,7 @@ export default function ChatInterface() {
           }
         }
       }
-      
+
       return responseContent;
     } catch (error) {
       console.error('Error in streamChatResponse:', error);
@@ -161,25 +180,25 @@ export default function ChatInterface() {
       throw error;
     }
   };
-  
+
   // Helper function to process data chunks
   const handleDataChunk = (dataContent: string, messageId: string, currentContent: string): string | undefined => {
     try {
       const jsonData = JSON.parse(dataContent);
-      
+
       if (jsonData.type === 'token') {
         const newContent = currentContent + jsonData.content;
         // Update UI immediately with each token
         updateMessage(messageId, { content: newContent });
         return newContent;
       } else if (jsonData.type === 'error') {
-        updateMessage(messageId, { 
+        updateMessage(messageId, {
           content: 'Error: ' + jsonData.content,
           status: 'error'
         });
         throw new Error(jsonData.content);
       } else if (jsonData.type === 'done') {
-        updateMessage(messageId, { 
+        updateMessage(messageId, {
           content: currentContent,
           status: 'complete'
         });
@@ -221,14 +240,14 @@ export default function ChatInterface() {
   }, [input]);
 
   return (
-    <div className="flex flex-col h-[80vh] bg-slate-900 border border-slate-700 rounded-xl overflow-hidden shadow-xl">
+    <div className="flex flex-col h-[80vh] bg-slate-900 border border-slate-700 rounded-xl overflow-hidden shadow-xl isolate">
       {/* Chat header */}
       <div className="bg-slate-800 py-3 px-4 border-b border-slate-700 flex justify-between items-center">
         <div className="flex items-center space-x-2">
           <span className="text-cyan-400"><SparklesIcon /></span>
           <h2 className="font-medium">Document Assistant</h2>
         </div>
-        <button 
+        <button
           onClick={clearMessages}
           className="text-slate-400 hover:text-white transition p-1 rounded hover:bg-slate-700"
           aria-label="Clear chat"
@@ -238,7 +257,7 @@ export default function ChatInterface() {
       </div>
 
       {/* Messages container */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
+      <div className="flex-1 overflow-y-auto overscroll-behavior-contain px-4 py-6 space-y-6">
         <AnimatePresence initial={false}>
           {messages.map((message) => (
             <motion.div
@@ -257,7 +276,7 @@ export default function ChatInterface() {
 
       {/* Input form */}
       <form onSubmit={handleSubmit} className="p-4 border-t border-slate-700 bg-slate-800">
-        <div 
+        <div
           className={cn(
             "flex items-end bg-slate-700 rounded-lg p-2 transition-all",
             isFocused ? "ring-2 ring-cyan-400" : ""
@@ -280,8 +299,8 @@ export default function ChatInterface() {
             disabled={!input.trim() || isLoading}
             className={cn(
               "p-2 rounded-md transition-all",
-              input.trim() && !isLoading 
-                ? "bg-gradient-to-r from-indigo-500 to-cyan-500 text-white" 
+              input.trim() && !isLoading
+                ? "bg-gradient-to-r from-indigo-500 to-cyan-500 text-white"
                 : "bg-slate-600 text-slate-400 cursor-not-allowed"
             )}
             aria-label="Send message"
