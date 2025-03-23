@@ -21,27 +21,27 @@ const Navbar = () => {
   };
 
   return (
-    <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-slate-400 shadow-md py-2' : 'bg-transparent py-4'}`}>
+    <nav className={`fixed top-0 w-full z-50 transition-all duration-350 ${isScrolled ? ' shadow-md py-2 backdrop-blur-xl' : 'bg-transparent py-4'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <FileText className="h-8 w-8 text-blue-500 " />
-            <span className={`font-bold text-xl  ${isScrolled ?"text-slate-900":"text-white"}`}>ChatPDFX</span>
+            <FileText className="h-8 w-8 text-purple-500" />
+            <span className={`font-bold text-xl text-white`}>ChatPDFX</span>
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             <Link 
               href="/documentmanager" 
-              className={`flex items-center space-x-1 text-gray-900 hover:text-blue-600 transition-colors ${isScrolled ?"text-slate-900":"text-white"}`}
+              className={`flex items-center space-x-1 hover:text-purple-500 transition-colors text-white`}
             >
               <FileText className="h-5 w-5" />
               <span>Browse</span>
             </Link>
             <Link 
               href="/chatstream" 
-              className={`flex items-center space-x-1 text-gray-900 hover:text-blue-600 transition-colors ${isScrolled ?"text-slate-900":"text-white"}`}
+              className={`flex items-center space-x-1 text-white hover:text-purple-500 transition-colors`}
             >
               <MessageSquare className="h-5 w-5" />
               <span>Chat</span>
