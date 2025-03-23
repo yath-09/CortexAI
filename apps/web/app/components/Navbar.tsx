@@ -26,7 +26,7 @@ const Navbar = () => {
         <div className="flex justify-between items-center">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <FileText className="h-8 w-8 text-blue-600" />
+            <FileText className="h-8 w-8 text-blue-500 " />
             <span className={`font-bold text-xl  ${isScrolled ?"text-slate-900":"text-white"}`}>ChatPDFX</span>
           </Link>
 
@@ -48,7 +48,7 @@ const Navbar = () => {
             </Link>
             <Link 
               href="/pdfupload" 
-              className="flex items-center space-x-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+              className="flex items-center space-x-1 bg-gradient-to-r from-purple-600 to-cyan-600 text-white px-4 py-2 rounded-md transition-colors"
             >
               <Upload className="h-5 w-5" />
               <span>Upload</span>

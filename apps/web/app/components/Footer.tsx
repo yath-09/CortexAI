@@ -18,7 +18,7 @@ const Footer = () => {
               Intelligent document analysis and conversation platform. Upload PDFs and chat with their content.
             </p>
             <div className="flex space-x-4">
-              <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
+              <a href="https://github.com/yath-09" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
                 <Github className="h-6 w-6" />
               </a>
               {/* Add other social icons as needed */}
