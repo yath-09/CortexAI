@@ -6,6 +6,7 @@ import Footer from "./components/Footer";
 import {
   ClerkProvider,
 } from '@clerk/nextjs'
+import { ToastProvider } from "./components/ToastProvider";
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -35,6 +36,7 @@ export default function RootLayout({
             {children}
           </main>
           <Footer />
+          <ToastProvider/>
         </div>
       </body>
     </html>

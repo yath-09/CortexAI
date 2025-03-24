@@ -1,7 +1,7 @@
 import { BASE_URL } from '../config';
 
 export const documentService = {
-  uploadDocument: async (formData: FormData, getToken: () => Promise<string>) => {
+  uploadDocument: async (formData: FormData, getToken: () => Promise<string | null>) => {
     try {
       // Verify formData contents before upload
       if (!formData || Array.from(formData.keys()).length === 0) {
@@ -31,7 +31,7 @@ export const documentService = {
     }
   },
 
-  getDocuments: async (queryParams: URLSearchParams, getToken: () => Promise<string>) => {
+  getDocuments: async (queryParams: URLSearchParams, getToken: () => Promise<string | null>) => {
     try {
       const token = await getToken();
       
@@ -52,7 +52,7 @@ export const documentService = {
     }
   },
 
-  getDocumentById: async (documentId: string, getToken: () => Promise<string>) => {
+  getDocumentById: async (documentId: string, getToken: () => Promise<string | null>) => {
     try {
       const token = await getToken();
       
@@ -74,7 +74,7 @@ export const documentService = {
     }
   },
 
-  deleteDocument: async (documentId: string, getToken: () => Promise<string>) => {
+  deleteDocument: async (documentId: string, getToken: () => Promise<string | null>) => {
     try {
       const token = await getToken();
       
