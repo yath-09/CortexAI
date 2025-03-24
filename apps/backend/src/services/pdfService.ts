@@ -8,16 +8,9 @@ import { prismaClient } from "db";
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 export class PDFProcessingService {
-  private embeddings: OpenAIEmbeddings;
   private s3Client: S3Client;
   
   constructor() {
-    // Initialize OpenAI embeddings
-    this.embeddings = new OpenAIEmbeddings({
-      apiKey: process.env.OPENAI_API_KEY!,
-      modelName: "text-embedding-ada-002",
-    });
-    
     // Initialize S3 client
     this.s3Client = new S3Client({
       region: process.env.AWS_REGION || 'us-east-1',
@@ -130,11 +123,18 @@ export class PDFProcessingService {
     filename: string, 
     pineconeClient: any, 
     userId: string,
-    metadata: Record<string, any> = {}
+    metadata: Record<string, any> = {},
+    userOpenAIKey: string,
   ): Promise<any> {
     let filePath = '';
     
     try {
+       // Initialize embeddings with user's OpenAI key
+       const embeddings = new OpenAIEmbeddings({
+        apiKey: userOpenAIKey,
+        modelName: "text-embedding-ada-002",
+      });
+
       // 1. Upload to S3
       const s3Info = await this.uploadToS3(buffer, filename);
       
@@ -188,7 +188,7 @@ export class PDFProcessingService {
         const chunkId = `pdf-${document.id}-chunk-${i}`;
         
         // Create embeddings for the chunk
-        const vector = await this.embeddings.embedQuery(chunk.pageContent);
+        const vector = await embeddings.embedQuery(chunk.pageContent);
         
         // Create metadata for Pinecone
         const chunkMetadata = {

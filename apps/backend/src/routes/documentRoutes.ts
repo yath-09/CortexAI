@@ -26,7 +26,7 @@ export function createDocumentRoutes(pineconeClient: any) {
   const documentController = new DocumentController();
 
   // Route for uploading PDF files with error handling
-  router.post('/upload-pdf', AuthMiddleware.authenticateUser,(req, res) => {
+  router.post('/upload-pdf', AuthMiddleware.authenticateUser,AuthMiddleware.getOpenAIKey,(req, res) => {
     upload.single('file')(req, res, (err) => {
       if (err) {
         // Handle Multer errors

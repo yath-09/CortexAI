@@ -10,12 +10,6 @@ import { prismaClient } from "db"
 
 const pdfService = new PDFProcessingService();
 
-// Initialize embeddings service
-const embeddings = new OpenAIEmbeddings({
-  apiKey: process.env.OPENAI_API_KEY!,
-  modelName: "text-embedding-ada-002",
-});
-
 export class DocumentController {
   /**
    * Handle text embedding requests
@@ -34,6 +28,15 @@ export class DocumentController {
       if (!pineconeClient) {
         return res.status(503).json({ error: "Database not yet initialized" });
       }
+       // Ensure OpenAI key is available
+       if (!req.openAIKey) {
+        return res.status(403).json({ error: "OpenAI API key is required" });
+      }
+      // Initialize embeddings with user's OpenAI key
+      const embeddings = new OpenAIEmbeddings({
+        apiKey: req.openAIKey,
+        modelName: "text-embedding-ada-002",
+      });
 
       // For long texts, split into chunks
       // Create a text splitter with specific configuration
@@ -134,6 +137,9 @@ export class DocumentController {
       if (!pineconeClient) {
         return res.status(503).json({ error: "Vector database not yet initialized" });
       }
+      if (!req.openAIKey) {
+        return res.status(503).json({ error: "Open Api key needed" });
+      }
 
       // Extract metadata from the request body
       let metadata = {};
@@ -150,6 +156,7 @@ export class DocumentController {
         pineconeClient,
         req.userId,  // Pass user ID
         metadata,
+        req.openAIKey!,
       );
 
       if (result.success) {

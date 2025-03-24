@@ -1,7 +1,8 @@
 // src/middleware/asyncHandler.ts
-import { Request, Response, NextFunction } from "express";
+import { type Request,type  Response, type NextFunction } from "express";
 
 import { clerkClient } from "@clerk/express";
+import { prismaClient } from "db";
 import jwt from "jsonwebtoken";
 
 export const asyncHandler = (fn: Function) => (req: Request, res: Response, next: NextFunction) => {
@@ -30,6 +31,7 @@ declare global {
         user?: {
           email: string;
         };
+        openAIKey?:string
       }
     }
   }
@@ -83,4 +85,34 @@ declare global {
         return res.status(403).json({ message: "Authentication failed" });
       }
     }
+
+    static async getOpenAIKey(req: Request, res: Response, next: NextFunction){
+      try {
+        // Ensure user is authenticated first
+        if (!req.userId) {
+          return res.status(401).json({ error: 'User not authenticated' });
+        }
+        //console.log(req.userId)
+        // Fetch the user's OpenAI key
+        const user = await prismaClient.user.findUnique({
+          where: { userId: req.userId as string },
+          select: { openAIKey: true }
+        });
+        //console.log(user)
+    
+        if (!user || !user.openAIKey) {
+          return res.status(403).json({ 
+            error: 'OpenAI API key is required. Please configure your OpenAI key first.' 
+          });
+        }
+    
+        // Attach OpenAI key to the request
+        req.openAIKey = user.openAIKey;
+        
+        next();
+      } catch (error) {
+        console.error('OpenAI key retrieval error:', error);
+        res.status(500).json({ error: 'Error retrieving OpenAI key' });
+      }
+    };
   }
