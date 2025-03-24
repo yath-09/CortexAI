@@ -129,6 +129,7 @@ export class PDFProcessingService {
     buffer: Buffer, 
     filename: string, 
     pineconeClient: any, 
+    userId: string,
     metadata: Record<string, any> = {}
   ): Promise<any> {
     let filePath = '';
@@ -143,13 +144,14 @@ export class PDFProcessingService {
       // 3. Create document record in database
       const document = await prismaClient.document.create({
         data: {
+          userId:userId,
           title: metadata.title || filename,
           filename: filename,
           contentType: 'pdf',
           s3Key: s3Info.key,
           s3Bucket: s3Info.bucket,
           s3Region: s3Info.region,
-          pineconeNamespace: `pdfchatbot`,//this can be segmented onto diff users and diff id's further when we add the data this is imp point
+          pineconeNamespace: `user_${userId}`,//this can be segmented onto diff users and diff id's further when we add the data this is imp point
           metadata: metadata
         }
       });
@@ -175,7 +177,7 @@ export class PDFProcessingService {
       
       // 8. Get the index from Pinecone
       const index = pineconeClient.index(process.env.PINECONE_INDEX!);
-      const namespace = index.namespace(document.pineconeNamespace);
+      const namespace = index.namespace(document.pineconeNamespace); //this is the same as user_userId for diif suer to be safee and fats accessible
       // 9. Process each chunk and store in Pinecone (not in PostgreSQL)
       const vectors = [];
       

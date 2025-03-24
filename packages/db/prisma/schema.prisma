@@ -21,8 +21,8 @@ model Document {
   metadata    Json     @default("{}")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
-  @@index([contentType])
+  userId      String   @default("")
+  @@index([contentType,userId])
   @@map("documents")
 }
 
@@ -47,6 +47,8 @@ model User {
   role      String   @default("user")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  userId    String     @unique
+  openAIKey String?  @default("")
 
   @@map("users")
 }

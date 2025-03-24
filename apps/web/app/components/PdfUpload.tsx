@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { UploadCloud, FileText, AlertCircle, CheckCircle } from 'lucide-react';
 import { BASE_URL } from '../../config';
+import { useAuth } from '@clerk/nextjs';
+import { uploadDocument } from '../services/uploadDocument';
 
 export default function PdfUpload() {
   const [file, setFile] = useState<File | null>(null);
@@ -13,6 +15,7 @@ export default function PdfUpload() {
     isError: boolean;
   } | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const { getToken } = useAuth();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -37,6 +40,7 @@ export default function PdfUpload() {
       setUploadStatus(null);
     }
   };
+  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,15 +85,12 @@ export default function PdfUpload() {
           return newProgress;
         });
       }, 400);
-
+    
       // Call the API
-      const response = await fetch(`${BASE_URL}/api/documents/upload-pdf`, {
-        method: 'POST',
-        body: formData,
-      });
-
+      const response = await uploadDocument(formData, getToken);
+      // Clear progress interval
       clearInterval(progressInterval);
-      
+    
       if (response.ok) {
         const result = await response.json();
         setUploadProgress(100);
@@ -97,6 +98,7 @@ export default function PdfUpload() {
           message: 'Document uploaded successfully!',
           isError: false
         });
+    
         // Reset form after successful upload
         setTimeout(() => {
           setFile(null);
@@ -104,13 +106,22 @@ export default function PdfUpload() {
           setUploadProgress(0);
         }, 2000);
       } else {
-        const errorData = await response.json();
+        // Try to parse error response, fallback to a generic error
+        let errorMessage = 'Failed to upload document';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          // If response is not JSON, use default error message
+        }
+    
         setUploadStatus({
-          message: errorData.error || 'Failed to upload document',
+          message: errorMessage,
           isError: true
         });
       }
     } catch (error) {
+      console.log(error)
       setUploadStatus({
         message: 'Network error. Please try again.',
         isError: true

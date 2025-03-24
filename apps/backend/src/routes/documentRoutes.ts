@@ -1,6 +1,8 @@
 import express from 'express';
 import multer from 'multer';
 import { DocumentController } from '../controller/documentController';
+import { AuthMiddleware } from '../utils/middleware';
+
 
 // Configure multer for memory storage (files stored in buffer)
 const upload = multer({ 
@@ -24,7 +26,7 @@ export function createDocumentRoutes(pineconeClient: any) {
   const documentController = new DocumentController();
 
   // Route for uploading PDF files with error handling
-  router.post('/upload-pdf', (req, res) => {
+  router.post('/upload-pdf', AuthMiddleware.authenticateUser,(req, res) => {
     upload.single('file')(req, res, (err) => {
       if (err) {
         // Handle Multer errors

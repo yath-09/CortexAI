@@ -3,7 +3,9 @@ import localFont from "next/font/local";
 import "./globals.css";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-
+import {
+  ClerkProvider,
+} from '@clerk/nextjs'
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -24,6 +26,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+    <ClerkProvider>
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <div className="relative flex min-h-screen flex-col">
@@ -31,10 +34,10 @@ export default function RootLayout({
           <main className="flex-1">
             {children}
           </main>
-
           <Footer />
         </div>
       </body>
     </html>
+    </ClerkProvider>
   );
 }

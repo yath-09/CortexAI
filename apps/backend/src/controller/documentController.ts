@@ -118,6 +118,12 @@ export class DocumentController {
    */
   async uploadPDF(req: Request, res: Response, pineconeClient: any) {
     try {
+
+      // Ensure user is authenticated and userId is available
+      if (!req.userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+
       // Check if file was uploaded
       if (!req.file) {
         return res.status(400).json({ error: "No PDF file uploaded" });
@@ -141,7 +147,8 @@ export class DocumentController {
         req.file.buffer,
         req.file.originalname,
         pineconeClient,
-        metadata
+        req.userId,  // Pass user ID
+        metadata,
       );
 
       if (result.success) {

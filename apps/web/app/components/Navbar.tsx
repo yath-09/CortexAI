@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { FileText, MessageSquare, Upload, Menu, X } from 'lucide-react';
+import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -53,10 +54,33 @@ const Navbar = () => {
               <Upload className="h-5 w-5" />
               <span>Upload</span>
             </Link>
+
+            {/* Clerk Authentication Components */}
+            <div className="flex items-center space-x-4">
+              <SignedOut>
+                <div className="flex items-center space-x-1 bg-gradient-to-r from-purple-600 to-cyan-600 text-white px-4 py-2 rounded-md transition-colors duration-300 shadow-lg hover:shadow-xl">
+                  <SignInButton />
+                </div>
+              </SignedOut>
+              <SignedIn>
+                <UserButton/>
+              </SignedIn>
+            </div>
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="md:hidden">
+          <div className="md:hidden flex items-center space-x-4">
+            {/* Mobile Clerk Authentication */}
+            <SignedOut>
+              <div className="bg-amber-200 px-3 py-2 rounded-xl text-sm bg-gradient-to-r from-blue-400 to-[#FBA87C] text-[#222222] hover:scale-105 hover:text-white transition-all duration-300 shadow-lg hover:shadow-xl">
+                <SignInButton />
+              </div>
+            </SignedOut>
+            <SignedIn>
+              <UserButton afterSignOutUrl="/" />
+            </SignedIn>
+
+            {/* Mobile Menu Toggle */}
             <button 
               onClick={toggleMobileMenu} 
               className="text-gray-700 hover:text-blue-600 focus:outline-none"
