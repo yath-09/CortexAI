@@ -15,7 +15,8 @@ import {
     X,
     Loader
 } from 'lucide-react';
-import { BASE_URL } from '../../config';
+import { documentService } from '../../services/documentService';
+import { useAuth } from '@clerk/nextjs';
 
 // Document type definition
 interface Document {
@@ -23,6 +24,7 @@ interface Document {
     title: string;
     filename: string;
     createdAt: string;
+    s3Url:string,
 }
 
 // Document detail type
@@ -52,6 +54,7 @@ export default function DocumentManager() {
         totalPages: 0,
         hasMore: false
     });
+    const {getToken}=useAuth()
 
     // State for loading and error handling
     const [isLoading, setIsLoading] = useState(false);
@@ -63,7 +66,7 @@ export default function DocumentManager() {
     const [sortOrder, setSortOrder] = useState('desc');
 
     // State for document details modal
-    const [selectedDocument, setSelectedDocument] = useState<DocumentDetail | null>(null);
+    const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [isDetailLoading, setIsDetailLoading] = useState(false);
 
@@ -91,8 +94,11 @@ export default function DocumentManager() {
                 ...(searchTerm && { search: searchTerm })
             });
 
-            const response = await fetch(`${BASE_URL}/api/documents/documents?${queryParams.toString()}`);
-
+            //const response = await fetch(`${BASE_URL}/api/documents/documents?${queryParams.toString()}`);
+            const response = await documentService.getDocuments(
+                new URLSearchParams({ page: '1', limit: '10' }), 
+                getToken
+              );
             if (!response.ok) {
                 throw new Error('Failed to fetch documents');
             }
@@ -121,25 +127,11 @@ export default function DocumentManager() {
     };
 
     // Function to view document details
-    const viewDocumentDetails = async (documentId: string) => {
-        setIsDetailLoading(true);
-        setError(null);
-
-        try {
-            const response = await fetch(`${BASE_URL}/api/documents/documents/${documentId}`);
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch document details');
-            }
-
-            const data = await response.json();
-            setSelectedDocument(data.document);
+    const viewDocumentDetails = (documentId: string) => {
+        const document = documents.find(doc => doc.id === documentId);
+        if (document) {
+            setSelectedDocument(document);
             setIsDetailModalOpen(true);
-        } catch (err: any) {
-            setError(err.message || 'An error occurred while fetching document details');
-            console.error('Error fetching document details:', err);
-        } finally {
-            setIsDetailLoading(false);
         }
     };
 
@@ -151,9 +143,10 @@ export default function DocumentManager() {
         setError(null);
 
         try {
-            const response = await fetch(`${BASE_URL}/api/documents/documents/${documentToDelete}`, {
-                method: 'DELETE',
-            });
+            const response=await documentService.deleteDocument(
+                documentToDelete, 
+                getToken
+              );
 
             if (!response.ok) {
                 throw new Error('Failed to delete document');

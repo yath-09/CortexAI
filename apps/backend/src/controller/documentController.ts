@@ -1,6 +1,7 @@
 // src/controllers/documentController.ts
 
-import { Request, Response } from 'express';
+// src/controllers/documentController.ts
+import type { Request, Response } from 'express';
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { PDFProcessingService } from '../services/pdfService';
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
@@ -174,6 +175,10 @@ export class DocumentController {
    */
   async getAllDocuments(req: Request, res: Response) {
     try {
+      // Ensure user is authenticated and userId is available(for safety only)
+      if (!req.userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
       // Extract query parameters
       const page = parseInt(req.query.page as string) || 1;
       const pageSize = parseInt(req.query.pageSize as string) || 10;
@@ -198,7 +203,9 @@ export class DocumentController {
 
       // Get documents with pagination, sorting, and filtering
       const documents = await prismaClient.document.findMany({
-        where,
+        where:{
+           userId:req.userId
+        },
         orderBy: { [sortBy]: sortOrder },
         skip,
         take: pageSize,
@@ -208,13 +215,26 @@ export class DocumentController {
           title: true,
           filename: true,
           createdAt: true,
+          s3Key: true,
+          s3Bucket: true,
+          s3Region: true,
           // Omit large fields like full metadata unless needed
         }
       });
-
+      if (!documents) {
+        return res.status(404).json({ error: "Document not found" });
+      }
+      
+      const documentsWithS3Urls = documents.map(doc => ({
+        id: doc.id,
+        title: doc.title,
+        filename: doc.filename,
+        createdAt: doc.createdAt,
+        s3Url: `https://${doc.s3Bucket}.s3.${doc.s3Region}.amazonaws.com/${doc.s3Key}`
+      }));
       // Return documents with pagination metadata
       return res.json({
-        documents,
+        documents: documentsWithS3Urls,
         pagination: {
           page,
           pageSize,
@@ -237,10 +257,14 @@ export class DocumentController {
    */
   async getDocumentById(req: Request, res: Response) {
     try {
+      // Ensure user is authenticated and userId is available
+      if (!req.userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
       const { id } = req.params;
 
       const document = await prismaClient.document.findUnique({
-        where: { id },
+        where: { id,userId:req.userId },
         // Select specific fields to optimize response size
         select: {
           id: true,
@@ -282,11 +306,15 @@ export class DocumentController {
    */
   async deleteDocument(req: Request, res: Response, pineconeClient: any) {
     try {
+      // Ensure user is authenticated and userId is available
+      if (!req.userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
       const { id } = req.params;
 
       // Get only the necessary fields for deletion
       const document = await prismaClient.document.findUnique({
-        where: { id },
+        where: { id ,userId:req.userId},
         select: {
           id: true,
           pineconeNamespace: true,

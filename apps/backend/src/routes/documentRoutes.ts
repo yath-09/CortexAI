@@ -46,17 +46,17 @@ export function createDocumentRoutes(pineconeClient: any) {
   });
 
   // Route to get all documents
-  router.get('/documents', (req, res) => {
+  router.get('/documents', AuthMiddleware.authenticateUser,(req, res) => {
     documentController.getAllDocuments(req, res);
   });
 
   // Route to get a specific document
-  router.get('/documents/:id', (req, res) => {
+  router.get('/documents/:id',AuthMiddleware.authenticateUser,(req, res) => {
     documentController.getDocumentById(req, res);
   });
 
   // Route to delete a document
-  router.delete('/documents/:id', (req, res) => {
+  router.delete('/documents/:id',AuthMiddleware.authenticateUser,(req, res) => {
     documentController.deleteDocument(req, res, pineconeClient);
   });
 

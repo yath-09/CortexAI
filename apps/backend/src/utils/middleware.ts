@@ -48,14 +48,14 @@ declare global {
   
       try {
         // Verify JWT token
-        console.log(1)
+      
         const formattedKey = (process.env.AUTH_JWT_KEY)!.replace(/\\n/g, "\n");
-        console.log(2)
+        
         const decoded = jwt.verify(token, formattedKey, {
           algorithms: ['RS256'],
           complete: true,
         });
-        console.log(1)
+       
         const userId = (decoded as any).payload.sub;
         if (!userId) {
           return res.status(403).json({ message: "Invalid token payload" });

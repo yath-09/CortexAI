@@ -49,7 +49,7 @@ const Navbar = () => {
             </Link>
             <Link 
               href="/pdfupload" 
-              className="flex items-center space-x-1 bg-gradient-to-r from-purple-600 to-cyan-600 text-white px-4 py-2 rounded-md transition-colors"
+              className="flex items-center space-x-1 text-white hover:text-purple-500 transition-colors"
             >
               <Upload className="h-5 w-5" />
               <span>Upload</span>

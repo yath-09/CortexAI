@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { UploadCloud, FileText, AlertCircle, CheckCircle } from 'lucide-react';
-import { BASE_URL } from '../../config';
 import { useAuth } from '@clerk/nextjs';
-import { uploadDocument } from '../services/uploadDocument';
+
+import { documentService } from '../../services/documentService';
 
 export default function PdfUpload() {
   const [file, setFile] = useState<File | null>(null);
@@ -87,7 +87,7 @@ export default function PdfUpload() {
       }, 400);
     
       // Call the API
-      const response = await uploadDocument(formData, getToken);
+      const response = await documentService.uploadDocument(formData, getToken);
       // Clear progress interval
       clearInterval(progressInterval);
     
