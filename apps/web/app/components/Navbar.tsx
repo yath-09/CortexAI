@@ -58,7 +58,7 @@ const Navbar = () => {
             {/* Clerk Authentication Components */}
             <div className="flex items-center space-x-4">
               <SignedOut>
-                <div className="flex items-center space-x-1 bg-gradient-to-r from-purple-600 to-cyan-600 text-white px-4 py-2 rounded-md transition-colors duration-300 shadow-lg hover:shadow-xl">
+                <div className="flex items-center space-x-1 bg-gradient-to-r from-purple-600 to-cyan-600 text-white px-4 py-2 rounded-md transition-colors duration-300 shadow-lg hover:scale-105">
                   <SignInButton />
                 </div>
               </SignedOut>
@@ -72,9 +72,9 @@ const Navbar = () => {
           <div className="md:hidden flex items-center space-x-4">
             {/* Mobile Clerk Authentication */}
             <SignedOut>
-              <div className="bg-amber-200 px-3 py-2 rounded-xl text-sm bg-gradient-to-r from-blue-400 to-[#FBA87C] text-[#222222] hover:scale-105 hover:text-white transition-all duration-300 shadow-lg hover:shadow-xl">
-                <SignInButton />
-              </div>
+            <div className="flex items-center space-x-1 bg-gradient-to-r from-purple-600 to-cyan-600 text-white px-4 py-2 rounded-md transition-colors duration-300 shadow-lg hover:scale-105">
+                <SignInButton/>
+            </div>
             </SignedOut>
             <SignedIn>
               <UserButton afterSignOutUrl="/" />

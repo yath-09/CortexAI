@@ -11,7 +11,7 @@ export const uploadDocument = async (formData: FormData, getToken: () => Promise
     const token = await getToken();
     
     if (!token) {
-      throw new Error('Authentication failed. Unable to get token.');
+      throw new Error('Please login to upload the documents');
     }
 
     // Perform file upload
@@ -22,12 +22,6 @@ export const uploadDocument = async (formData: FormData, getToken: () => Promise
       },
       body: formData,
     });
-
-    // if (!response.ok) {
-    //   const errorText = await response.text();
-    //   throw new Error(errorText || 'Upload failed');
-    // }
-
     return response;
   } catch (error) {
     console.error('Document upload error:', error);
