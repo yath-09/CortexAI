@@ -103,22 +103,85 @@ export class QueryService {
 
             // Get relevant context from vector database
             const matches = await this.queryEmbeddings(query, userOpenAIKey, 5, userId);
-
+            console.log("Hello1")
+            // Check if matches were found
             // Check if matches were found
             if (!matches || matches.length === 0) {
+                // Check for general/fallback queries
+                const generalQueries = [
+                    'hello',
+                    'hi',
+                    'who are you',
+                    'what can you do',
+                    'help',
+                    'introduce yourself',
+                    'hey'
+                ];
+
+                const lowercaseQuery = query.toLowerCase().trim();
+                const isGeneralQuery = generalQueries.some(q =>
+                    lowercaseQuery.includes(q) ||
+                    lowercaseQuery === q
+                );
+
+                if (isGeneralQuery) {
+                    // Predefined response for general queries
+                    const generalResponse = "Hello! I'm ChatPDFX, an AI assistant specialized in analyzing and conversing with PDF documents. I can help you extract insights, answer questions, and interact with your uploaded PDFs. How can I assist you today?";
+
+                    // Stream the response token by token
+                    let responseText = '';
+                    for (let char of generalResponse) {
+                        responseText += char;
+                        res.write(`data: ${JSON.stringify({
+                            type: 'token',
+                            content: char
+                        })}\n\n`);
+
+                        // Add a small delay to simulate more natural streaming
+                        await new Promise(resolve => setTimeout(resolve, 2));
+                    }
+
+                    // Send the full content at the end
+                    res.write(`data: ${JSON.stringify({
+                        type: 'fullContent',
+                        content: responseText
+                    })}\n\n`);
+
+                    return;
+                }
+
+                // If not a general query, then use the original no matches response
+                const generalResponse = "I don't have enough information to answer that question. Please upload a document first or provide more context."
+                let responseText = '';
+                for (let char of generalResponse) {
+                    responseText += char;
+                    res.write(`data: ${JSON.stringify({
+                        type: 'token',
+                        content: char
+                    })}\n\n`);
+
+                    // Add a small delay to simulate more natural streaming
+                    await new Promise(resolve => setTimeout(resolve, 2));
+                }
+
+                // Send the full content at the end
                 res.write(`data: ${JSON.stringify({
-                    type: 'content',
-                    content: "I don't have enough information to answer that question."
+                    type: 'fullContent',
+                    content: responseText
                 })}\n\n`);
+
                 return;
+
             }
+
+            console.log("hello2")
 
             // Extract text from metadata
             const relevantChunks = matches
                 .filter((match: any) => match.metadata && match.metadata.text)
                 .map((match: any) => match.metadata.text)
                 .join("\n\n");
-
+            console.log("Hell3")
             // Send status update
             res.write(`data: ${JSON.stringify({
                 type: 'status',
@@ -159,7 +222,7 @@ export class QueryService {
 
                 // Send the full response at the end as well (can be useful for client-side processing)
                 res.write(`data: ${JSON.stringify({ type: 'fullContent', content: responseText })}\n\n`);
-            } catch (error:any) {
+            } catch (error: any) {
                 if (error.response && error.response.status === 401) {
                     res.status(401).json({
                         message: "Invalid OpenAI API key",
@@ -190,7 +253,7 @@ export class QueryService {
                     type: 'streamError'
                 });
             }
-            
+
         }
     }
 
