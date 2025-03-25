@@ -9,7 +9,10 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { MdDelete } from "react-icons/md";
 import { IoSend } from "react-icons/io5";
 import { IoIosRefresh } from "react-icons/io";
-import { BASE_URL } from '../../config';
+import { useAuth } from '@clerk/nextjs';
+import { chatServicee } from '../../services/chatService';
+// Improved stream chat response function for better speed and reliability
+import toast from 'react-hot-toast';
 
 const SparklesIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -24,7 +27,7 @@ export default function ChatInterface() {
   const [isFocused, setIsFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  
+
   // Only auto-scroll if user is already at the bottom
   // Inside ChatInterface.tsx
   // Replace the existing useEffect for scrolling with this:
@@ -48,9 +51,9 @@ export default function ChatInterface() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // Prevent scroll to bottom of page when submitting
-  if (e.target && 'blur' in e.target) {
-    (e.target as HTMLElement).blur();
-  }
+    if (e.target && 'blur' in e.target) {
+      (e.target as HTMLElement).blur();
+    }
     if (!input.trim() || isLoading) return;
 
     const userMessage = input.trim();
@@ -85,30 +88,19 @@ export default function ChatInterface() {
     }
   };
 
-  // Improved stream chat response function for better speed and reliability
+  const { getToken } = useAuth()
+
+
   const streamChatResponse = async (query: string, messageId: string) => {
     try {
-      // Create an AbortController to be able to cancel the fetch if needed
-      const controller = new AbortController();
-      const signal = controller.signal;
-
-      // Set a timeout to abort if taking too long
-      const timeoutId = setTimeout(() => controller.abort(), 30000);
-
-      const response = await fetch(`${BASE_URL}/api/chat/stream`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ query }),
-        signal: signal
-      });
-
-      // Clear the timeout since we got a response
-      clearTimeout(timeoutId);
+      const response = await chatServicee.chatStream(query, getToken);
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        if (response.status === 403) {
+          toast.error('Open API key is missing or invalid. Please configure a valid API key.');
+          //throw new Error('API key missing or invalid');
+        }
+        //throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       // Create a reader from the response body
@@ -170,13 +162,19 @@ export default function ChatInterface() {
 
       return responseContent;
     } catch (error) {
-      console.error('Error in streamChatResponse:', error);
+      if (error.status === 403) {
+        toast.error('API key is missing or invalid. Please add a valid API key.')
+      }
+
       if (error.name === 'AbortError') {
         updateMessage(messageId, {
           content: 'Request timed out. Please try again.',
           status: 'error',
         });
+
+        toast.error('Request timed out. Please try again.');
       }
+
       throw error;
     }
   };

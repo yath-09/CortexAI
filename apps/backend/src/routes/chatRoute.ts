@@ -3,26 +3,29 @@
 // src/routes/chatRoutes.ts
 import { Router } from "express";
 import { QueryService } from "../services/queryService";
-import { asyncHandler } from "../utils/middleware";
+import { asyncHandler, AuthMiddleware } from "../utils/middleware";
 
 export function createChatRoutes(pineconeClient: any) {
   const router = Router();
   const queryService = new QueryService(pineconeClient);
 
   // Regular non-streaming endpoint (keep for compatibility)
-  router.post("/", asyncHandler(async (req, res) => {
+  router.post("/",AuthMiddleware.authenticateUser,AuthMiddleware.getOpenAIKey, asyncHandler(async (req:any, res:any) => {
     const { query } = req.body;
 
     if (!query) {
       return res.status(400).json({ error: "Query is required" });
     }
 
-    const response = await queryService.processChat(query);
+    const response = await queryService.processChat(query,req.openAIApiKey);
     res.json({ response });
   }));
 
   // New streaming endpoint
-  router.post("/stream", asyncHandler(async (req, res) => {
+  router.post("/stream",AuthMiddleware.authenticateUser,AuthMiddleware.getOpenAIKey,asyncHandler(async (req:any, res:any) => {
+    if (!req.userId) {
+      return res.status(401).json({ error: "User not authenticated" });
+    }
     const { query } = req.body;
 
     if (!query) {
@@ -39,7 +42,7 @@ export function createChatRoutes(pineconeClient: any) {
 
     try {
       // Stream the response
-      await queryService.processChatStream(query, res);
+      await queryService.processChatStream(query, res,req.openAIKey!,req.userId!);
 
       // End the stream
       res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
