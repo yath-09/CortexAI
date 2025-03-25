@@ -17,7 +17,7 @@ export function createChatRoutes(pineconeClient: any) {
       return res.status(400).json({ error: "Query is required" });
     }
 
-    const response = await queryService.processChat(query,req.openAIApiKey);
+    const response = await queryService.processChat(query,req.openAIKey);
     res.json({ response });
   }));
 
@@ -52,8 +52,6 @@ export function createChatRoutes(pineconeClient: any) {
       res.end();
     }
   }));
-
-  // WebSocket implementation can be added here if using a WebSocket library
 
   return router;
 }
