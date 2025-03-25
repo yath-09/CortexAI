@@ -68,13 +68,7 @@ export default function ChatInterface() {
   }, []);
   const fetchRecentChats = async () => {
     try {
-      const token = await getToken();
-      const response = await fetch(`${BASE_URL}/api/chat/getUserChats`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
+      const response = await chatServicee.getUserChats(getToken)
       if (!response.ok) {
         throw new Error('Failed to fetch recent chats');
       }
@@ -92,12 +86,7 @@ export default function ChatInterface() {
     try {
       //first save the current and then add the other
       //await saveChatHistory()
-      const token = await getToken();
-      const response = await fetch(`${BASE_URL}/api/chat/getUserChats/${chatId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const response=await chatServicee.getUserChatsById(chatId,getToken)
 
       if (!response.ok) {
         throw new Error('Failed to load chat session');
@@ -330,7 +319,6 @@ export default function ChatInterface() {
     try {
       if (isSavingChat || isLoading || isDeletingChat) return;
       setIsSavingChat(true);
-      const token = await getToken();
       const chatMessages = messages.map(message => ({
         id: message.id,
         role: message.role,
@@ -342,22 +330,12 @@ export default function ChatInterface() {
         // Include status
         status: message.status
       }));
+      if(chatMessages &&  chatMessages.length <=1){
+        toast.error("Please initiate a chat first");
+        return;
+      }
 
-      // Check if we're updating an existing chat session or creating a new one
-      const url = currentChatSessionId
-        ? `${BASE_URL}/api/chat/updateChatSession/${currentChatSessionId}`
-        : `${BASE_URL}/api/chat/addChatSession`;
-
-      const method = currentChatSessionId ? 'PUT' : 'POST';
-
-      const response = await fetch(url, {
-        method: method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ chatMessages }),
-      });
+      const response=await chatServicee.manageChatSession(currentChatSessionId,messages,getToken)
 
       if (response && response.status === 202) {
         toast.error("Please initiate a chat first");
@@ -390,13 +368,8 @@ export default function ChatInterface() {
       setIsDeletingChat(true);
       // If there's a current chat session, delete it
       if (currentChatSessionId) { //checking here only to prevent backend call and only if the use is there
-        const token = await getToken();
-        const response = await fetch(`${BASE_URL}/api/chat/deleteChatSession/${currentChatSessionId}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
+        
+        const response = await chatServicee.deleteChatSession(currentChatSessionId,getToken)
 
         if (!response.ok) {
           throw new Error('Failed to delete chat session');
