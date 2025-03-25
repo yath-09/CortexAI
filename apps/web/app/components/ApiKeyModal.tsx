@@ -5,9 +5,6 @@ import { Overlay } from './DocumentManager';
 import toast from 'react-hot-toast';
 import { openAikey } from '../../services/openAikey';
 
-interface APIKeyModalProps {
-    buttonLabel?: string;
-}
 
 export default function APIKeyModal() {
     const [apiKey, setApiKey] = useState('');

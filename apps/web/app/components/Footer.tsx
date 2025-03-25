@@ -73,7 +73,7 @@ const Footer = () => {
               Contact
             </h3>
             <ul className="space-y-2 text-gray-400">
-              <li className="hover:text-cyan-400 transition-colors">support@chatpdfx.com</li>
+              <li className="hover:text-cyan-400 transition-colors">yatharth0903@gmail.com</li>
               <li className="hover:text-cyan-400 transition-colors">Privacy Policy</li>
               <li className="hover:text-cyan-400 transition-colors">Terms of Service</li>
             </ul>

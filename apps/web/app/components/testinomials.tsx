@@ -4,34 +4,9 @@ import { motion } from "framer-motion";
 import { Star } from "lucide-react";
 import Image from "next/image";
 import { cn } from "../../lib/utils";
+import { testimonials } from "../../constants";
 
-// Testimonial data for ChatPDFX
-const testimonials = [
-  {
-    text: "ChatPDFX completely transformed how I process research papers. I can now extract insights and create summaries in seconds that used to take hours.",
-    author: "Yatharth Ahuja",
-    role: "Developer",
-    avatar: "https://avatars.githubusercontent.com/u/97472914?s=400&u=7b0f917680be9471722508e0ddb8c37e74ba3306&v=4",
-    rating: 5,
-    title: "Developing simplified",
-  },
-  {
-    text: "As a legal professional, I deal with hundreds of documents daily. ChatPDFX's ability to extract key information and generate concise briefs is nothing short of revolutionary.",
-    author: "Marcus Johnson",
-    role: "Corporate Attorney",
-    avatar: "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcTG4x9oVV82OO52eNlWDSpEn7_5LHdSgsLsPgGojY5z8KIOAJMLM1fU7abG9ck1Ony4KqMSSlyCl84hCaT0b_haoA",
-    rating: 4,
-    title: "Legal Work Streamlined",
-  },
-  {
-    text: "My students love how ChatPDFX makes complex textbooks accessible. The summary feature has been an incredible learning aid for my undergraduate classes.",
-    author: "Prof. Sydney Sweeney",
-    role: "University Educator",
-    avatar: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Sydney_Sweeney_at_the_2024_Toronto_International_Film_Festival_%28cropped%2C_rotated%29.jpg/330px-Sydney_Sweeney_at_the_2024_Toronto_International_Film_Festival_%28cropped%2C_rotated%29.jpg",
-    rating: 5,
-    title: "Education Enhanced",
-  },
-];
+
 
 // Testimonial Card Component
 export const TestimonialCard = ({

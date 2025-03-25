@@ -493,18 +493,28 @@ interface OverlayProps {
 }
 
 export function Overlay({ children, onClose }: OverlayProps) {
+    useEffect(() => {
+      // Disable scrolling on mount
+      document.body.style.overflow = "hidden";
+  
+      return () => {
+        // Re-enable scrolling when unmounted
+        document.body.style.overflow = "";
+      };
+    }, []);
+  
     return (
-        <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center min-h-screen p-4">
-            {/* Background Overlay with Blur */}
-            <div
-                className="fixed inset-0 bg-opacity-50 backdrop-blur-sm transition-opacity"
-                onClick={onClose}
-            ></div>
-
-            {/* Modal Content */}
-            <div className="relative bg-slate-800 rounded-lg max-w-md w-full mx-auto shadow-xl border border-slate-700">
-                {children}
-            </div>
+      <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center min-h-screen p-4">
+        {/* Background Overlay with Blur */}
+        <div
+          className="fixed inset-0 bg-opacity-50 backdrop-blur-sm transition-opacity"
+          onClick={onClose}
+        ></div>
+  
+        {/* Modal Content */}
+        <div className="relative bg-slate-800 rounded-lg max-w-md w-full mx-auto shadow-xl border border-slate-700">
+          {children}
         </div>
+      </div>
     );
-}
+  }
