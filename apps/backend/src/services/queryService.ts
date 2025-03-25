@@ -263,15 +263,9 @@ export class QueryService {
     private getSystemPrompt(): string {
         return `
 You are a helpful assistant that answers questions based on the user's documents.
-
 Guidelines:
 - Answer based ONLY on the provided context
-- If the context doesn't contain the answer, say "I don't have specific information about that in our knowledge base"
 - Keep answers concise and focused
-- Use a professional, friendly tone
-- Prioritize accuracy over speculation
-- Format responses for readability when appropriate
-- Cite specific policies or procedures when available in the context
 `;
     }
 }
