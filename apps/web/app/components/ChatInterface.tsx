@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
-import { useChat } from '../../lib/context/ChatContext';
+import { MessageType, useChat } from '../../lib/context/ChatContext';
 import MessageItem from './MessageItem';
 import { cn } from '../../lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -14,8 +14,9 @@ import { chatServicee } from '../../services/chatService';
 // Improved stream chat response function for better speed and reliability
 import toast from 'react-hot-toast';
 import { resolve } from 'path';
-import { FaSave } from 'react-icons/fa';
+import { FaHistory, FaSave } from 'react-icons/fa';
 import { BASE_URL } from '../../config';
+import { Overlay } from './DocumentManager';
 
 const SparklesIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -23,17 +24,28 @@ const SparklesIcon = () => (
   </svg>
 );
 
+
+// Chat session type
+interface ChatSession {
+  id: string;
+  title: string;
+  createdAt: string;
+}
 export default function ChatInterface() {
   const { messages, addMessage, updateMessage, isLoading, setIsLoading, clearMessages } = useChat();
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isFocused, setIsFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { getToken } = useAuth()
+  const [currentChatSessionId, setCurrentChatSessionId] = useState("")
 
 
-  // Only auto-scroll if user is already at the bottom
-  // Inside ChatInterface.tsx
-  // Replace the existing useEffect for scrolling with this:
+  // New state for recent chats
+  const [recentChats, setRecentChats] = useState<ChatSession[]>([]);
+  const [isRecentChatsModalOpen, setIsRecentChatsModalOpen] = useState(false);
+  const [isSavingChat, setIsSavingChat] = useState(false);
+  const [isDeletingChat, setIsDeletingChat] = useState(false);
 
   // Auto-scroll only happens within the chat container, not the whole page
   useEffect(() => {
@@ -49,6 +61,75 @@ export default function ChatInterface() {
       });
     }
   }, [messages]);
+
+  // Fetch recent chats on component mount
+  useEffect(() => {
+    fetchRecentChats();
+  }, []);
+  const fetchRecentChats = async () => {
+    try {
+      const token = await getToken();
+      const response = await fetch(`${BASE_URL}/api/chat/getUserChats`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch recent chats');
+      }
+
+      const data = await response.json();
+      setRecentChats(data.chats);
+    } catch (error) {
+      console.error('Error fetching recent chats:', error);
+      toast.error('Failed to fetch recent chats');
+    }
+  };
+
+  // Load specific chat session
+  const loadChatSession = async (chatId: string) => {
+    try {
+      //first save the current and then add the other
+      //await saveChatHistory()
+      const token = await getToken();
+      const response = await fetch(`${BASE_URL}/api/chat/getUserChats/${chatId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to load chat session');
+      }
+
+      const data = await response.json();
+      if (data.chats && data.chats.length > 0) {
+        // Clear current messages
+        clearMessages();
+
+        // Add messages from the loaded chat to prevent the default asssitant chat we sliced ho 
+
+        data.chats[0].messages.slice(1).forEach((message: MessageType) => {
+          addMessage({
+            role: message.role,
+            content: message.content,
+            status: message.status || 'complete'
+            //timestamp: new Date(message.timestamp)
+          });
+        });
+
+        // Set the current chat session ID
+        setCurrentChatSessionId(chatId);
+
+        // Close the modal
+        setIsRecentChatsModalOpen(false);
+      }
+    } catch (error) {
+      console.error('Error loading chat session:', error);
+      toast.error('Failed to load chat session');
+    }
+  };
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
@@ -91,15 +172,12 @@ export default function ChatInterface() {
     }
   };
 
-  const { getToken } = useAuth()
-
-
   const streamChatResponse = async (query: string, messageId: string) => {
     try {
       const response = await chatServicee.chatStream(query, getToken);
 
       if (!response.ok) {
-        if( response.status==401){
+        if (response.status == 401) {
           toast.error('Open API key is invalid. Please configure a valid API key.');
         }
         else if (response.status == 403) {
@@ -167,7 +245,7 @@ export default function ChatInterface() {
       }
 
       return responseContent;
-    } catch (error:any) {
+    } catch (error: any) {
       console.log("1")
       if (error.status == 401) {
         toast.error('API key is invalid. Please add a valid API key.')
@@ -246,67 +324,101 @@ export default function ChatInterface() {
   useEffect(() => {
     adjustTextareaHeight();
   }, [input]);
-  const [currentChatSessionId,setCurrentChatSessionId]=useState("")
+
 
   const saveChatHistory = async () => {
     try {
+      if (isSavingChat || isLoading || isDeletingChat) return;
+      setIsSavingChat(true);
       const token = await getToken();
       const chatMessages = messages.map(message => ({
         id: message.id,
         role: message.role,
         content: message.content,
         // Ensure timestamp is converted to ISO string for consistent serialization
-        timestamp: message.timestamp instanceof Date 
-          ? message.timestamp.toISOString() 
+        timestamp: message.timestamp instanceof Date
+          ? message.timestamp.toISOString()
           : new Date().toISOString(),
         // Include status
         status: message.status
       }));
-  
+
       // Check if we're updating an existing chat session or creating a new one
-      const url = currentChatSessionId 
+      const url = currentChatSessionId
         ? `${BASE_URL}/api/chat/updateChatSession/${currentChatSessionId}`
         : `${BASE_URL}/api/chat/addChatSession`;
-  
+
       const method = currentChatSessionId ? 'PUT' : 'POST';
-  
+
       const response = await fetch(url, {
         method: method,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({chatMessages}),
+        body: JSON.stringify({ chatMessages }),
       });
-     
+
       if (response && response.status === 202) {
         toast.error("Please initiate a chat first");
         return;
       }
-  
+
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-  
+
       // If it's a new chat session, set the chat session ID
       if (!currentChatSessionId) {
         const data = await response.json();
         setCurrentChatSessionId(data.id);
       }
-  
+      await fetchRecentChats()
       toast.success('Chat saved successfully!');
     } catch (error) {
       console.error('Error saving chat history:', error);
       toast.error('Failed to save chat. Please try again.');
     }
+    finally {
+      setIsSavingChat(false);
+    }
   };
 
-  const handleDelete=async()=>{
-    toast.success("Chat deleted successfully")
-    setCurrentChatSessionId("") //making new sessions
-     clearMessages();
-  }
+  const handleDelete = async () => {
+    try {
+      if (isDeletingChat || isLoading || isSavingChat) return;
+      setIsDeletingChat(true);
+      // If there's a current chat session, delete it
+      if (currentChatSessionId) { //checking here only to prevent backend call and only if the use is there
+        const token = await getToken();
+        const response = await fetch(`${BASE_URL}/api/chat/deleteChatSession/${currentChatSessionId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
 
+        if (!response.ok) {
+          throw new Error('Failed to delete chat session');
+        }
+        await fetchRecentChats();
+        
+      }
+
+      setCurrentChatSessionId("") //making new sessions
+      clearMessages();
+      toast.success("Chat deleted successfully");
+     
+
+    } catch (error) {
+      console.error('Error deleting chat:', error);
+      toast.error('Failed to delete chat. Please try again.');
+    } finally {
+      setIsDeletingChat(false);
+    }
+
+
+  }
 
   return (
     <div className="flex flex-col h-[80vh] bg-slate-900 border border-slate-700 rounded-xl overflow-hidden shadow-xl isolate">
@@ -318,18 +430,33 @@ export default function ChatInterface() {
         </div>
         <div className="flex space-x-3">
           <button
-            onClick={saveChatHistory}
+            onClick={() => setIsRecentChatsModalOpen(true)}
             className="text-slate-400 hover:text-white transition p-1 rounded hover:bg-slate-700"
+            aria-label="Recent Chats"
+          >
+            <FaHistory />
+          </button>
+          <button
+            onClick={saveChatHistory}
+            disabled={isSavingChat || isLoading || isDeletingChat}
+            className={cn(
+              "text-slate-400 hover:text-white transition p-1 rounded hover:bg-slate-700",
+              (isSavingChat || isLoading || isDeletingChat) && "opacity-50 cursor-not-allowed"
+            )}
             aria-label="Save chat"
           >
-            <FaSave />
+            {isSavingChat ? <IoIosRefresh className="animate-spin" /> : <FaSave />}
           </button>
           <button
             onClick={handleDelete}
-            className="text-slate-400 hover:text-white transition p-1 rounded hover:bg-slate-700"
+            disabled={isDeletingChat || isLoading || isSavingChat}
+            className={cn(
+              "text-slate-400 hover:text-white transition p-1 rounded hover:bg-slate-700",
+              (isDeletingChat || isLoading || isSavingChat) && "opacity-50 cursor-not-allowed"
+            )}
             aria-label="Clear chat"
           >
-            <MdDelete />
+            {isDeletingChat ? <IoIosRefresh className="animate-spin" /> : <MdDelete />}
           </button>
         </div>
       </div>
@@ -394,6 +521,35 @@ export default function ChatInterface() {
           Answers are generated based on your document library
         </p>
       </form>
+      {isRecentChatsModalOpen && (
+        <Overlay onClose={() => setIsRecentChatsModalOpen(false)}>
+          <div className="p-6">
+            <h2 className="text-xl font-semibold mb-4 text-white">Recent Chats</h2>
+            {recentChats.length === 0 ? (
+              <p className="text-slate-400">No recent chats found.</p>
+            ) : (
+              <div className="space-y-2">
+                {recentChats.map((chat) => (
+                  <button
+                    key={chat.id}
+                    onClick={() => loadChatSession(chat.id)}
+                    className="w-full text-left p-3 bg-slate-700 rounded hover:bg-slate-600 transition"
+                  >
+                    <div className="flex justify-between items-center">
+                      <span className="text-white">
+                        {chat.title.split(" ").slice(0, 10).join(" ") + (chat.title.split(" ").length > 20 ? "..." : "")}
+                      </span>
+                      <span className="text-xs text-slate-400">
+                        {new Date(chat.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </Overlay>
+      )}
     </div>
   );
 }
