@@ -1,4 +1,3 @@
-// lib/context/ChatContext.tsx
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
@@ -13,7 +12,9 @@ export type MessageType = {
 
 type ChatContextType = {
   messages: MessageType[];
-  addMessage: (message: Omit<MessageType, 'id' | 'timestamp'>) => void;
+  currentChatSessionId: string | null;
+  setCurrentChatSessionId: (id: string | null) => void;
+  addMessage: (message: Omit<MessageType, 'id' | 'timestamp'>) => string;
   updateMessage: (id: string, updates: Partial<MessageType>) => void;
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
@@ -32,8 +33,9 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     },
   ]);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentChatSessionId, setCurrentChatSessionId] = useState<string | null>(null);
 
-  const addMessage = (message: Omit<MessageType, 'id' | 'timestamp'>) => {
+  const addMessage = (message: Omit<MessageType, 'id' | 'timestamp'>): string => {
     const newMessage = {
       ...message,
       id: crypto.randomUUID(),
@@ -60,12 +62,15 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         timestamp: new Date(),
       },
     ]);
+    setCurrentChatSessionId(null);
   };
 
   return (
     <ChatContext.Provider
       value={{
         messages,
+        currentChatSessionId,
+        setCurrentChatSessionId,
         addMessage,
         updateMessage,
         isLoading,

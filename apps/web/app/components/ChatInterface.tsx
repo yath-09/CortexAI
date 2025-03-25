@@ -14,6 +14,8 @@ import { chatServicee } from '../../services/chatService';
 // Improved stream chat response function for better speed and reliability
 import toast from 'react-hot-toast';
 import { resolve } from 'path';
+import { FaSave } from 'react-icons/fa';
+import { BASE_URL } from '../../config';
 
 const SparklesIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -244,6 +246,67 @@ export default function ChatInterface() {
   useEffect(() => {
     adjustTextareaHeight();
   }, [input]);
+  const [currentChatSessionId,setCurrentChatSessionId]=useState("")
+
+  const saveChatHistory = async () => {
+    try {
+      const token = await getToken();
+      const chatMessages = messages.map(message => ({
+        id: message.id,
+        role: message.role,
+        content: message.content,
+        // Ensure timestamp is converted to ISO string for consistent serialization
+        timestamp: message.timestamp instanceof Date 
+          ? message.timestamp.toISOString() 
+          : new Date().toISOString(),
+        // Include status
+        status: message.status
+      }));
+  
+      // Check if we're updating an existing chat session or creating a new one
+      const url = currentChatSessionId 
+        ? `${BASE_URL}/api/chat/updateChatSession/${currentChatSessionId}`
+        : `${BASE_URL}/api/chat/addChatSession`;
+  
+      const method = currentChatSessionId ? 'PUT' : 'POST';
+  
+      const response = await fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({chatMessages}),
+      });
+     
+      if (response && response.status === 202) {
+        toast.error("Please initiate a chat first");
+        return;
+      }
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+  
+      // If it's a new chat session, set the chat session ID
+      if (!currentChatSessionId) {
+        const data = await response.json();
+        setCurrentChatSessionId(data.id);
+      }
+  
+      toast.success('Chat saved successfully!');
+    } catch (error) {
+      console.error('Error saving chat history:', error);
+      toast.error('Failed to save chat. Please try again.');
+    }
+  };
+
+  const handleDelete=async()=>{
+    toast.success("Chat deleted successfully")
+    setCurrentChatSessionId("") //making new sessions
+     clearMessages();
+  }
+
 
   return (
     <div className="flex flex-col h-[80vh] bg-slate-900 border border-slate-700 rounded-xl overflow-hidden shadow-xl isolate">
@@ -253,13 +316,22 @@ export default function ChatInterface() {
           <span className="text-cyan-400"><SparklesIcon /></span>
           <h2 className="font-medium">Document Assistant</h2>
         </div>
-        <button
-          onClick={clearMessages}
-          className="text-slate-400 hover:text-white transition p-1 rounded hover:bg-slate-700"
-          aria-label="Clear chat"
-        >
-          <MdDelete />
-        </button>
+        <div className="flex space-x-3">
+          <button
+            onClick={saveChatHistory}
+            className="text-slate-400 hover:text-white transition p-1 rounded hover:bg-slate-700"
+            aria-label="Save chat"
+          >
+            <FaSave />
+          </button>
+          <button
+            onClick={handleDelete}
+            className="text-slate-400 hover:text-white transition p-1 rounded hover:bg-slate-700"
+            aria-label="Clear chat"
+          >
+            <MdDelete />
+          </button>
+        </div>
       </div>
 
       {/* Messages container */}

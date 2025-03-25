@@ -28,15 +28,15 @@ model Document {
 
 // For tracking chat history
 model ChatHistory {
-  id        String   @id @default(uuid())
-  userId    String?  // Optional user ID if authentication is implemented
-  sessionId String   // Session identifier
-  query     String   @db.Text // User's question
-  response  String   @db.Text // System's response
+  id        String   @id @default(cuid())
+  userId    String   
+  messages  Json     // Store messages as JSON to match the MessageType structure
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  title     String   @default("Untitled Chat") // Default title
 
-  @@index([userId, sessionId])
-  @@map("chat_history")
+  @@index([userId])
+  @@map("chat_histories")
 }
 
 // Users table if authentication is needed
