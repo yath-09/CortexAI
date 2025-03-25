@@ -37,14 +37,14 @@ export class QueryService {
     /**
      * Generate embeddings for a text query and search the vector database
      */
-    async queryEmbeddings(text: string, userOpenAIKey:string,topK: number = 5,userId:string =""): Promise<any> {
+    async queryEmbeddings(text: string, userOpenAIKey: string, topK: number = 5, userId: string = ""): Promise<any> {
         if (!this.pineconeClient) {
             throw new Error("Database not yet initialized");
         }
-        const embeddings=new OpenAIEmbeddings({
-                apiKey: userOpenAIKey!,
-                batchSize: 512,
-                modelName: "text-embedding-ada-002",
+        const embeddings = new OpenAIEmbeddings({
+            apiKey: userOpenAIKey!,
+            batchSize: 512,
+            modelName: "text-embedding-ada-002",
         });
         const vector = await embeddings.embedQuery(text);
         const index = this.pineconeClient.Index(this.indexName);
@@ -62,9 +62,9 @@ export class QueryService {
     /**
      * Process a chat query by retrieving context and generating a response (non-streaming)
      */
-    async processChat(query: string,userOpenAIKey:string): Promise<string> {
+    async processChat(query: string, userOpenAIKey: string): Promise<string> {
         // Get relevant context from vector database
-        const matches = await this.queryEmbeddings(query, userOpenAIKey,5);
+        const matches = await this.queryEmbeddings(query, userOpenAIKey, 5);
 
         // Check if matches were found
         if (!matches || matches.length === 0) {
@@ -81,9 +81,9 @@ export class QueryService {
         const systemPrompt = this.getSystemPrompt();
 
         // Use the correct format for calling the chat model
-        const openai=new ChatOpenAI({
-                apiKey: userOpenAIKey,
-                modelName: "gpt-4-turbo",
+        const openai = new ChatOpenAI({
+            apiKey: userOpenAIKey,
+            modelName: "gpt-4-turbo",
         });
         const aiResponse = await openai.invoke([
             { role: "system", content: systemPrompt },
@@ -96,13 +96,13 @@ export class QueryService {
     /**
      * Process a chat query with streaming response
      */
-    async processChatStream(query: string, res: Response,userOpenAIKey:string,userId:string): Promise<void> {
+    async processChatStream(query: string, res: Response, userOpenAIKey: string, userId: string): Promise<void> {
         try {
             // Send status update
             //res.write(`data: ${JSON.stringify({ type: 'status', content: 'Searching for relevant information...' })}\n\n`);
 
             // Get relevant context from vector database
-            const matches = await this.queryEmbeddings(query,userOpenAIKey,5,userId);
+            const matches = await this.queryEmbeddings(query, userOpenAIKey, 5, userId);
 
             // Check if matches were found
             if (!matches || matches.length === 0) {
@@ -134,34 +134,63 @@ export class QueryService {
             let responseText = '';
 
             // Stream the response
-            const streamingOpenai=new ChatOpenAI({
+            try {
+                const streamingOpenai = new ChatOpenAI({
                     apiKey: userOpenAIKey,
                     modelName: "gpt-4-turbo",
                     streaming: true,
-            });
-            await streamingOpenai.invoke(
-                [
-                    { role: "system", content: systemPrompt },
-                    { role: "user", content: userMessage }
-                ],
-                {
-                    callbacks: [
-                        {
-                            handleLLMNewToken(token: string) {
-                                responseText += token;
-                                res.write(`data: ${JSON.stringify({ type: 'token', content: token })}\n\n`);
-                            },
-                        },
+                });
+                await streamingOpenai.invoke(
+                    [
+                        { role: "system", content: systemPrompt },
+                        { role: "user", content: userMessage }
                     ],
-                }
-            );
+                    {
+                        callbacks: [
+                            {
+                                handleLLMNewToken(token: string) {
+                                    responseText += token;
+                                    res.write(`data: ${JSON.stringify({ type: 'token', content: token })}\n\n`);
+                                },
+                            },
+                        ],
+                    }
+                );
 
-            // Send the full response at the end as well (can be useful for client-side processing)
-            res.write(`data: ${JSON.stringify({ type: 'fullContent', content: responseText })}\n\n`);
+                // Send the full response at the end as well (can be useful for client-side processing)
+                res.write(`data: ${JSON.stringify({ type: 'fullContent', content: responseText })}\n\n`);
+            } catch (error:any) {
+                if (error.response && error.response.status === 401) {
+                    res.status(401).json({
+                        message: "Invalid OpenAI API key",
+                        type: 'apiKeyError'
+                    });
+                } else {
+                    console.error("Error in streaming chat:", error);
+                    res.status(500).json({
+                        message: "An error occurred while processing the chat",
+                        type: 'streamError'
+                    });
+                }
+                return;
+            }
+
 
         } catch (error: any) {
-            console.error("Error in streaming chat:", error);
-            res.write(`data: ${JSON.stringify({ type: 'error', content: error.message })}\n\n`);
+            //console.error("Error in streaming chat:", error.status);
+            if (error && error.status === 401) {
+                res.status(401).json({
+                    message: "Invalid OpenAI API key",
+                    type: 'apiKeyError'
+                });
+            }
+            else {
+                res.status(500).json({
+                    message: error.message || "An unexpected error occurred",
+                    type: 'streamError'
+                });
+            }
+            
         }
     }
 

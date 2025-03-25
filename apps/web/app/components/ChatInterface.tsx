@@ -13,6 +13,7 @@ import { useAuth } from '@clerk/nextjs';
 import { chatServicee } from '../../services/chatService';
 // Improved stream chat response function for better speed and reliability
 import toast from 'react-hot-toast';
+import { resolve } from 'path';
 
 const SparklesIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -96,9 +97,12 @@ export default function ChatInterface() {
       const response = await chatServicee.chatStream(query, getToken);
 
       if (!response.ok) {
-        if (response.status === 403) {
-          toast.error('Open API key is missing or invalid. Please configure a valid API key.');
-          //throw new Error('API key missing or invalid');
+        if( response.status==401){
+          toast.error('Open API key is invalid. Please configure a valid API key.');
+        }
+        else if (response.status == 403) {
+          toast.error('Open API key is missing. Please configure a valid API key.');
+          throw new Error('API key missing or invalid');
         }
         //throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -161,12 +165,16 @@ export default function ChatInterface() {
       }
 
       return responseContent;
-    } catch (error) {
-      if (error.status === 403) {
+    } catch (error:any) {
+      console.log("1")
+      if (error.status == 401) {
+        toast.error('API key is invalid. Please add a valid API key.')
+      }
+      else if (error.status === 403) {
         toast.error('API key is missing or invalid. Please add a valid API key.')
       }
 
-      if (error.name === 'AbortError') {
+      else if (error.name === 'AbortError') {
         updateMessage(messageId, {
           content: 'Request timed out. Please try again.',
           status: 'error',

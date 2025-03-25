@@ -4,7 +4,7 @@
 import { Router } from "express";
 import { QueryService } from "../services/queryService";
 import { asyncHandler, AuthMiddleware } from "../utils/middleware";
-
+import { prismaClient } from "db";
 export function createChatRoutes(pineconeClient: any) {
   const router = Router();
   const queryService = new QueryService(pineconeClient);
@@ -52,6 +52,41 @@ export function createChatRoutes(pineconeClient: any) {
       res.end();
     }
   }));
+
+  router.post("/updateApiKey",AuthMiddleware.authenticateUser,asyncHandler(async (req: any, res: any) => {
+      if (!req.userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+
+      const { apiKey } = req.body;
+      //console.log(apiKey)
+
+      if (!apiKey) {
+        return res.status(400).json({ error: "API Key is required" });
+      }
+
+      try {
+        // Update the user's OpenAI API key
+        const updatedUser = await prismaClient.user.update({
+          where: { userId: req.userId },
+          data: { openAIKey: apiKey },
+        });
+
+        return res.status(200).json({
+          message: "API Key updated successfully",
+          user: {
+            email: updatedUser.email,
+          },
+        });
+      } catch (error: any) {
+        console.error("Error updating API key:", error);
+        return res.status(500).json({
+          error: "Failed to update API key",
+          details: error.message || "Unknown error",
+        });
+      }
+    })
+  );
 
   return router;
 }

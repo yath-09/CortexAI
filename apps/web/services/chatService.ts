@@ -32,7 +32,8 @@ export const chatServicee = {
     
           return response;
         } catch (error) {
-          console.error('Chat stream error:', error);
+          //console.log("heheh")
+          //console.error('Chat stream error:', error);
           throw error;
         }
       }
