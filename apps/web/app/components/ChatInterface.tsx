@@ -36,7 +36,7 @@ export default function ChatInterface() {
   // Auto-scroll only happens within the chat container, not the whole page
   useEffect(() => {
     // Check if we should scroll
-    const shouldScroll = messages.length > 0 && messages[messages.length - 1].status === 'loading';
+    const shouldScroll = messages.length > 0 && messages[messages.length - 1]?.status === 'loading';
 
     if (shouldScroll && messagesEndRef.current) {
       // Use scrollIntoView but only within the container
@@ -77,10 +77,10 @@ export default function ChatInterface() {
     setIsLoading(true);
 
     try {
-      await streamChatResponse(userMessage, assistantMsgId);
+      await streamChatResponse(userMessage, assistantMsgId!);
     } catch (error) {
       console.error('Error fetching chat response:', error);
-      updateMessage(assistantMsgId, {
+      updateMessage(assistantMsgId!, {
         content: 'Sorry, there was an error processing your request. Please try again.',
         status: 'error',
       });

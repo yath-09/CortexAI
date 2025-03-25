@@ -121,9 +121,8 @@ export default function PdfUpload() {
         });
       }
     } catch (error) {
-      //console.log(error.message)
       setUploadStatus({
-        message: error?.message || 'Network error. Please try again.',
+        message: error instanceof Error ? error.message : 'Network error. Please try again.',
         isError: true
       });
       setIsUploading(false);
