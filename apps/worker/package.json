@@ -1,0 +1,22 @@
+{
+  "name": "worker",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "scripts": {
+    "start": "bun run index.ts",
+    "dev": "nodemon --exec bun run index.ts"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "svix": "^1.61.0",
+    "db":"*"
+  }
+}
