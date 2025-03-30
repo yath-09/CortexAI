@@ -1,0 +1,23 @@
+# Use the official Bun image
+FROM oven/bun:latest
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files first for better caching
+COPY package.json bun.lock turbo.json ./
+
+# Install dependencies using Bun
+RUN bun install
+
+# Copy the entire monorepo
+COPY . .
+
+# Build all packages using Turborepo
+RUN bunx turbo run build --filter=web
+
+# Expose the Next.js default port
+EXPOSE 3000
+
+# Start Next.js inside Turborepo
+CMD ["bun", "start:web"]
