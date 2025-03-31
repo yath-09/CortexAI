@@ -232,7 +232,6 @@ export function createChatRoutes(pineconeClient: any) {
     asyncHandler(async (req: any, res: any) => {
       const { chatId } = req.params;
       const { title } = req.body;
-
       if (!req.userId) {
         return res.status(401).json({ error: "User not authenticated" });
       }

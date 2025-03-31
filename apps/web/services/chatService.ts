@@ -88,6 +88,19 @@ export const chatServicee = {
 
     return response;
   },
+  updateChatTitle: async (chatId:string,editTitle: string, getToken: () => Promise<string | null>) => {
+      const token=await getToken()
+      const response = await fetch(`${BASE_URL}/api/chat/updateChatTitle/${chatId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ title:editTitle}),
+      });
+
+    return response;
+  },
 
 
 

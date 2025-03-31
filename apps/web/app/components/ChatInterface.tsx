@@ -13,10 +13,9 @@ import { useAuth } from '@clerk/nextjs';
 import { chatServicee } from '../../services/chatService';
 // Improved stream chat response function for better speed and reliability
 import toast from 'react-hot-toast';
-import { resolve } from 'path';
 import { FaHistory, FaSave } from 'react-icons/fa';
-import { BASE_URL } from '../../config';
 import { Overlay } from './DocumentManager';
+import { FiEdit2, FiCheck, FiX } from "react-icons/fi";
 
 const SparklesIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -393,6 +392,45 @@ export default function ChatInterface() {
 
   }
 
+  const [editingChatId, setEditingChatId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const startEditing = (chat: ChatSession, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent chat loading when clicking edit
+    setEditingChatId(chat.id);
+    setEditTitle(chat.title);
+  };
+
+  const cancelEditing = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent chat loading when clicking cancel
+    setEditingChatId(null);
+    setEditTitle("");
+  };
+  
+  const updateChatTitle = async (chatId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent chat loading when clicking save
+    try {
+      const response=await chatServicee.updateChatTitle(chatId,editTitle,getToken)
+      const data = await response.json();
+      
+      if (data.success) {
+        // Update local state with the new title
+        setRecentChats(prevChats =>
+          prevChats.map(chat =>
+            chat.id === chatId ? { ...chat, title: editTitle } : chat
+          )
+        );
+        setEditingChatId(null);
+        toast.success('Chat title updated');
+      } else {
+        console.error("Failed to update chat title");
+        toast.error('Failed to update chat title');
+      }
+    } catch (error) {
+      console.error("Error updating chat title:", error);
+      toast.error('Error updating chat title');
+    }
+  };
+
   return (
     <div className="flex flex-col h-[80vh] bg-slate-900 border border-slate-700 rounded-xl overflow-hidden shadow-xl isolate">
       {/* Chat header */}
@@ -503,20 +541,58 @@ export default function ChatInterface() {
             ) : (
               <div className="space-y-2">
                 {recentChats.map((chat) => (
-                  <button
+                  <div
                     key={chat.id}
-                    onClick={() => loadChatSession(chat.id)}
-                    className="w-full text-left p-3 bg-slate-700 rounded hover:bg-slate-600 transition"
+                    className="w-full p-3 bg-slate-700 rounded hover:bg-slate-600 transition"
                   >
                     <div className="flex justify-between items-center">
-                      <span className="text-white">
-                        {chat.title.split(" ").slice(0, 10).join(" ") + (chat.title.split(" ").length > 20 ? "..." : "")}
-                      </span>
-                      <span className="text-xs text-slate-400">
+                      {editingChatId === chat.id ? (
+                        // Edit mode
+                        <div className="flex-1 flex items-center space-x-2">
+                          <input
+                            type="text"
+                            value={editTitle}
+                            onChange={(e) => setEditTitle(e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="flex-1 bg-slate-800 text-white px-2 py-1 rounded border border-slate-600 focus:outline-none focus:ring-1 focus:ring-cyan-400"
+                            autoFocus
+                          />
+                          <button 
+                            onClick={(e) => updateChatTitle(chat.id, e)}
+                            className="text-green-400 hover:text-green-300 p-1"
+                          >
+                            <FiCheck size={16} />
+                          </button>
+                          <button 
+                            onClick={(e) => cancelEditing(e)}
+                            className="text-red-400 hover:text-red-300 p-1"
+                          >
+                            <FiX size={16} />
+                          </button>
+                        </div>
+                      ) : (
+                        // View mode
+                        <div className="flex-1 flex items-center space-x-2">
+                          <div 
+                            onClick={() => loadChatSession(chat.id)}
+                            className="flex-1 text-white cursor-pointer"
+                          >
+                            {chat.title.split(" ").slice(0, 10).join(" ") + 
+                              (chat.title.split(" ").length > 10 ? "..." : "")}
+                          </div>
+                          <button 
+                            onClick={(e) => startEditing(chat, e)}
+                            className="text-slate-400 hover:text-white p-1"
+                          >
+                            <FiEdit2 size={16} />
+                          </button>
+                        </div>
+                      )}
+                      {/* <span className="text-xs text-slate-400 ml-2">
                         {new Date(chat.createdAt).toLocaleDateString()}
-                      </span>
+                      </span> */}
                     </div>
-                  </button>
+                  </div>
                 ))}
               </div>
             )}
