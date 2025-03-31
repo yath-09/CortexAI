@@ -102,8 +102,9 @@ export default function ChatInterface() {
           addMessage({
             role: message.role,
             content: message.content,
-            status: message.status || 'complete'
-            //timestamp: new Date(message.timestamp)
+            status: message.status || 'complete',
+            // Parse the timestamp string into a Date object if it exists
+            timestamp: message.timestamp ? new Date(message.timestamp) : new Date()
           });
         });
 

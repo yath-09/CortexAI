@@ -148,7 +148,7 @@ const MessageItem = ({ message }: MessageItemProps) => {
           "text-[10px] opacity-0 group-hover:opacity-90 transition-opacity mt-1",
           isUser ? "text-right text-indigo-200" : "text-left text-slate-400"
         )}>
-          {formatTimeAgo(new Date(message.timestamp))}
+          {message.timestamp ? formatTimeAgo(new Date(message.timestamp)) : 'just now'}
         </div>
       </div>
 
