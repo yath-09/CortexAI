@@ -12,6 +12,8 @@ const Navbar = () => {
   const [role, setRole] = useState(false);//false means it is a user not a admin
   const { getToken } = useAuth()
   const getUser = async () => {
+    const token = await getToken();
+    if (!token) return; 
     const response = await documentService.getRole(
       getToken
     );
