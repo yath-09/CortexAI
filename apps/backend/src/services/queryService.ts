@@ -1,5 +1,6 @@
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { ChatOpenAI } from "@langchain/openai";
+import { prismaClient } from "db";
 import { type Response } from "express";
 
 export class QueryService {
@@ -37,7 +38,7 @@ export class QueryService {
     /**
      * Generate embeddings for a text query and search the vector database
      */
-    async queryEmbeddings(text: string, userOpenAIKey: string, topK: number = 5, userId: string = ""): Promise<any> {
+    async queryEmbeddings(text: string, userOpenAIKey: string, topK: number = 3, userId: string = ""): Promise<any> {
         if (!this.pineconeClient) {
             throw new Error("Database not yet initialized");
         }
@@ -48,7 +49,20 @@ export class QueryService {
         });
         const vector = await embeddings.embedQuery(text);
         const index = this.pineconeClient.Index(this.indexName);
-        const namespace = index.namespace(userId); // Namespace for searching in vector databases for the namespaces
+        const university = await prismaClient.user.findFirst({
+            where: {
+                userId: userId,
+            },
+            select: {
+                role: true,
+                universityName: true,
+            },
+        })
+        // const namespaceKey =
+        //     university?.role === "admin" && university?.universityName
+        //         ? `university-${university.universityName}`
+        //         : userId;
+        const namespace = index.namespace(`university-${university?.universityName}`); // Namespace for searching in vector databases for the namespaces
 
         const queryResponse = await namespace.query({
             vector,

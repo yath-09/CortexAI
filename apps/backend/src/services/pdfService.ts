@@ -142,6 +142,16 @@ export class PDFProcessingService {
       filePath = await this.savePDFToDisk(buffer, filename);
       
       // 3. Create document record in database
+      const university = await prismaClient.user.findFirst({
+        where: {
+            userId: userId,
+        },
+        select: {
+            role: true,
+            universityName: true,
+        },
+    })
+
       const document = await prismaClient.document.create({
         data: {
           userId:userId,
@@ -151,7 +161,7 @@ export class PDFProcessingService {
           s3Key: s3Info.key,
           s3Bucket: s3Info.bucket,
           s3Region: s3Info.region,
-          pineconeNamespace: `${userId}`,//this can be segmented onto diff users and diff id's further when we add the data this is imp point
+          pineconeNamespace: `university-${university?.universityName}`,//this can be segmented onto diff users and diff id's further when we add the data this is imp point
           metadata: metadata
         }
       });

@@ -44,11 +44,17 @@ model User {
   id        String   @id @default(uuid())
   email     String   @unique
   name      String?
-  role      String   @default("user")
+  role      Role   @default(user)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   userId    String     @unique
   openAIKey String?  @default("")
+  universityName String @default("")
 
   @@map("users")
+}
+
+enum Role{
+  user
+  admin
 }
