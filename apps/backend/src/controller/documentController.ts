@@ -28,8 +28,8 @@ export class DocumentController {
       if (!pineconeClient) {
         return res.status(503).json({ error: "Database not yet initialized" });
       }
-       // Ensure OpenAI key is available
-       if (!req.openAIKey) {
+      // Ensure OpenAI key is available
+      if (!req.openAIKey) {
         return res.status(403).json({ error: "OpenAI API key is required" });
       }
       // Initialize embeddings with user's OpenAI key
@@ -205,13 +205,24 @@ export class DocumentController {
         ];
       }
 
-      // Count total matching documents (for pagination info)
-      const totalCount = await prismaClient.document.count({ where });
+      const university = await prismaClient.user.findFirst({
+        where: {
+          userId: req.userId,
+        },
+        select: {
+          role: true,
+          universityName: true,
+        },
+      })
+
+      // if (!university?.role !=admin) {
+      //   return res.status(404).json({ error: "Document not found" });
+      // }
 
       // Get documents with pagination, sorting, and filtering
       const documents = await prismaClient.document.findMany({
-        where:{
-           userId:req.userId
+        where: {
+          universityName: university?.universityName
         },
         orderBy: { [sortBy]: sortOrder },
         skip,
@@ -231,7 +242,9 @@ export class DocumentController {
       if (!documents) {
         return res.status(404).json({ error: "Document not found" });
       }
-      
+      // Count total matching documents (for pagination info)
+      const totalCount = documents.length;
+
       const documentsWithS3Urls = documents.map(doc => ({
         id: doc.id,
         title: doc.title,
@@ -271,7 +284,7 @@ export class DocumentController {
       const { id } = req.params;
 
       const document = await prismaClient.document.findUnique({
-        where: { id,userId:req.userId },
+        where: { id },
         // Select specific fields to optimize response size
         select: {
           id: true,
@@ -321,7 +334,7 @@ export class DocumentController {
 
       // Get only the necessary fields for deletion
       const document = await prismaClient.document.findUnique({
-        where: { id ,userId:req.userId},
+        where: { id },
         select: {
           id: true,
           pineconeNamespace: true,

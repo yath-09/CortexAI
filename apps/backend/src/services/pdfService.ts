@@ -162,7 +162,8 @@ export class PDFProcessingService {
           s3Bucket: s3Info.bucket,
           s3Region: s3Info.region,
           pineconeNamespace: `university-${university?.universityName}`,//this can be segmented onto diff users and diff id's further when we add the data this is imp point
-          metadata: metadata
+          metadata: metadata,
+          universityName:university?.universityName
         }
       });
       
