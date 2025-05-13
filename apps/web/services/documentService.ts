@@ -51,6 +51,26 @@ export const documentService = {
       throw error;
     }
   },
+  getRole: async (getToken: () => Promise<string | null>) => {
+    try {
+      const token = await getToken();
+      
+      if (!token) {
+        throw new Error('Please login to view documents');
+      }
+
+      const response = await fetch(`${BASE_URL}/api/documents/get-role`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      return  response;
+    } catch (error) {
+      console.error('Fetch role error', error);
+      throw error;
+    }
+  },
 
   getDocumentById: async (documentId: string, getToken: () => Promise<string | null>) => {
     try {

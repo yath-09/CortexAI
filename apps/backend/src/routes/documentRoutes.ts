@@ -2,6 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import { DocumentController } from '../controller/documentController';
 import { AuthMiddleware } from '../utils/middleware';
+import { prismaClient } from 'db';
 
 
 // Configure multer for memory storage (files stored in buffer)
@@ -24,6 +25,27 @@ const upload = multer({
 export function createDocumentRoutes(pineconeClient: any) {
   const router = express.Router();
   const documentController = new DocumentController();
+  router.get('/get-role', AuthMiddleware.authenticateUser, async (req, res) => {
+    try {
+      const user = await prismaClient.user.findUnique({
+        where: {
+          userId: req.userId,
+        },
+        select: {
+          role: true,
+        },
+      });
+  
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+  
+      return res.status(200).json({ role: user.role });
+    } catch (error) {
+      console.error("Error fetching role:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
 
   // Route for uploading PDF files with error handling
   router.post('/upload-pdf', AuthMiddleware.authenticateUser,AuthMiddleware.getOpenAIKey,(req, res) => {

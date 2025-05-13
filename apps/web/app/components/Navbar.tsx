@@ -3,18 +3,35 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { FileText, MessageSquare, Upload, Menu, X } from 'lucide-react';
 import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
-import  APIKeyModal  from './ApiKeyModal';
-
+import APIKeyModal from './ApiKeyModal';
+import { useAuth } from '@clerk/nextjs';
+import { documentService } from '../../services/documentService';
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [role, setRole] = useState(false);//false means it is a user not a admin
+  const { getToken } = useAuth()
+  const getUser = async () => {
+    const response = await documentService.getRole(
+      getToken
+    );
+    if (!response.ok) {
+      throw new Error('Failed to fetch documents');
+    }
 
+    const data = await response.json();
+    if (data?.role == 'admin') {
+      setRole(true);
+    }
+
+  }
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
     };
-    
+
     window.addEventListener('scroll', handleScroll);
+    getUser();
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -34,18 +51,20 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link href="/documentmanager" className="flex items-center space-x-1 hover:text-purple-500 transition-colors text-white">
+            {role && <><Link href="/documentmanager" className="flex items-center space-x-1 hover:text-purple-500 transition-colors text-white">
               <FileText className="h-5 w-5" />
               <span>Browse</span>
             </Link>
+              <Link href="/pdfupload" className="flex items-center space-x-1 text-white hover:text-purple-500 transition-colors">
+                <Upload className="h-5 w-5" />
+                <span>Upload</span>
+              </Link>
+            </>}
             <Link href="/chatstream" className="flex items-center space-x-1 text-white hover:text-purple-500 transition-colors">
               <MessageSquare className="h-5 w-5" />
               <span>Chat</span>
             </Link>
-            <Link href="/pdfupload" className="flex items-center space-x-1 text-white hover:text-purple-500 transition-colors">
-              <Upload className="h-5 w-5" />
-              <span>Upload</span>
-            </Link>
+
 
             {/* Clerk Authentication Components */}
             <div className="flex items-center space-x-4">
@@ -82,17 +101,19 @@ const Navbar = () => {
       {isMobileMenuOpen && (
         <div className="md:hidden bg-slate-400 py-4 shadow-lg w-[50%] ml-auto rounded-xl mr-2 relative">
           <div className="flex flex-col space-y-4 px-4">
-            <Link href="/documentmanager" className="flex items-center space-x-2 py-2 text-gray-700 hover:text-blue-600 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
-              <FileText className="h-5 w-5" />
-              <span>Browse</span>
-            </Link>
+            {role && <>
+              <Link href="/documentmanager" className="flex items-center space-x-2 py-2 text-gray-700 hover:text-blue-600 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
+                <FileText className="h-5 w-5" />
+                <span>Browse</span>
+              </Link>
+              <Link href="/pdfupload" className="flex items-center space-x-2 py-2 text-gray-700 hover:text-blue-600 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
+                <Upload className="h-5 w-5" />
+                <span>Upload</span>
+              </Link>
+            </>}
             <Link href="/chatstream" className="flex items-center space-x-2 py-2 text-gray-700 hover:text-blue-600 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
               <MessageSquare className="h-5 w-5" />
               <span>Chat</span>
-            </Link>
-            <Link href="/pdfupload" className="flex items-center space-x-2 py-2 text-gray-700 hover:text-blue-600 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
-              <Upload className="h-5 w-5" />
-              <span>Upload</span>
             </Link>
             <SignedIn>
               <APIKeyModal />

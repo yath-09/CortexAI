@@ -37,7 +37,7 @@ const Footer = () => {
               Quick Links
             </h3>
             <ul className="space-y-2">
-              <li>
+              {/* <li>
                 <Link
                   href="/documentmanager"
                   className="text-gray-400 hover:text-cyan-400 transition-colors flex items-center space-x-2"
@@ -45,7 +45,7 @@ const Footer = () => {
                   <FileText className="h-4 w-4 text-cyan-400" />
                   <span>Browse Documents</span>
                 </Link>
-              </li>
+              </li> */}
               <li>
                 <Link
                   href="/chatstream"
@@ -55,7 +55,7 @@ const Footer = () => {
                   <span>Chat Interface</span>
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link
                   href="/pdfupload"
                   className="text-gray-400 hover:text-cyan-400 transition-colors flex items-center space-x-2"
@@ -63,7 +63,7 @@ const Footer = () => {
                   <Upload className="h-4 w-4 text-cyan-400" />
                   <span>Upload PDF</span>
                 </Link>
-              </li>
+              </li> */}
             </ul>
           </div>
 

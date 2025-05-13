@@ -61,6 +61,7 @@
         "@tailwindcss/postcss": "^4.0.14",
         "@types/react-syntax-highlighter": "^15.5.13",
         "clsx": "^2.1.1",
+        "db": "*",
         "framer-motion": "^12.5.0",
         "lucide-react": "^0.483.0",
         "motion": "^12.5.0",
