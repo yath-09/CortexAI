@@ -132,7 +132,7 @@ export class PDFProcessingService {
        // Initialize embeddings with user's OpenAI key
        const embeddings = new OpenAIEmbeddings({
         apiKey: userOpenAIKey,
-        modelName: "text-embedding-ada-002",
+        modelName: "text-embedding-3-small",
       });
 
       // 1. Upload to S3
@@ -178,8 +178,9 @@ export class PDFProcessingService {
       
       // 6. Create a text splitter
       const textSplitter = new RecursiveCharacterTextSplitter({
-        chunkSize: 1000,
-        chunkOverlap: 200,
+        chunkSize: 500,
+        chunkOverlap: 40,
+        separators: ["\n\n", "\n", ".", " ", ""], // progressively fall back
       });
       
       // 7. Split the text into chunks

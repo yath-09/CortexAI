@@ -35,7 +35,7 @@ export class DocumentController {
       // Initialize embeddings with user's OpenAI key
       const embeddings = new OpenAIEmbeddings({
         apiKey: req.openAIKey,
-        modelName: "text-embedding-ada-002",
+        modelName: "text-embedding-3-small",
       });
 
       // For long texts, split into chunks

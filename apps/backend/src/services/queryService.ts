@@ -15,7 +15,7 @@ export class QueryService {
         // this.embeddings = new OpenAIEmbeddings({
         //     apiKey: process.env.OPENAI_API_KEY!,
         //     batchSize: 512,
-        //     modelName: "text-embedding-ada-002",
+        //     modelName: "text-embedding-3-small",
         // });
 
         // Initialize OpenAI chat model (non-streaming)
@@ -45,7 +45,7 @@ export class QueryService {
         const embeddings = new OpenAIEmbeddings({
             apiKey: userOpenAIKey!,
             batchSize: 512,
-            modelName: "text-embedding-ada-002",
+            modelName: "text-embedding-3-small",
         });
         const vector = await embeddings.embedQuery(text);
         const index = this.pineconeClient.Index(this.indexName);
@@ -116,7 +116,7 @@ export class QueryService {
             //res.write(`data: ${JSON.stringify({ type: 'status', content: 'Searching for relevant information...' })}\n\n`);
 
             // Get relevant context from vector database
-            const matches = await this.queryEmbeddings(query, userOpenAIKey, 5, userId);
+            const matches = await this.queryEmbeddings(query, userOpenAIKey, 3, userId);
             console.log("Hello1")
             // Check if matches were found
             // Check if matches were found
