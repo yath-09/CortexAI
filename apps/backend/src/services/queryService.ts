@@ -38,7 +38,7 @@ export class QueryService {
     /**
      * Generate embeddings for a text query and search the vector database
      */
-    async queryEmbeddings(text: string, userOpenAIKey: string, topK: number = 3, userId: string = ""): Promise<any> {
+    async queryEmbeddings(text: string, userOpenAIKey: string, topK: number = 5, userId: string = ""): Promise<any> {
         if (!this.pineconeClient) {
             throw new Error("Database not yet initialized");
         }
@@ -116,10 +116,12 @@ export class QueryService {
             //res.write(`data: ${JSON.stringify({ type: 'status', content: 'Searching for relevant information...' })}\n\n`);
 
             // Get relevant context from vector database
-            const matches = await this.queryEmbeddings(query, userOpenAIKey, 3, userId);
-            console.log("Hello1")
+            const matches = await this.queryEmbeddings(query, userOpenAIKey, 10, userId);
+            console.log("Generting response using vectors storage")
             // Check if matches were found
             // Check if matches were found
+
+            //console.log(matches.length);
             if (!matches || matches.length === 0) {
                 // Check for general/fallback queries
                 const generalQueries = [
@@ -188,14 +190,14 @@ export class QueryService {
 
             }
 
-            console.log("hello2")
+            //console.log("hello2")
 
             // Extract text from metadata
             const relevantChunks = matches
                 .filter((match: any) => match.metadata && match.metadata.text)
                 .map((match: any) => match.metadata.text)
                 .join("\n\n");
-            console.log("Hell3")
+            
             // Send status update
             res.write(`data: ${JSON.stringify({
                 type: 'status',
