@@ -57,7 +57,7 @@ export function FAQAccordian() {
           </span>
         </h2>
         <p className="text-gray-300 max-w-2xl mx-auto">
-          Get quick answers to common queries about ChatPDFX and its document interaction capabilities.
+          Get quick answers to common queries about CortexAI and its document interaction capabilities.
         </p>
       </motion.div>
       <motion.div

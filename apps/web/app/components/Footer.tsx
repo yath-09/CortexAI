@@ -13,11 +13,12 @@ const Footer = () => {
             <div className="flex items-center space-x-2 mb-4">
               <FileText className="h-8 w-8 text-cyan-400" />
               <span className="font-bold text-xl bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-                ChatPDFX
+                CortexAI
               </span>
             </div>
             <p className="text-gray-400 mb-4">
-              Intelligent document analysis and conversation platform. Upload PDFs and chat with their content.
+            A context-aware assistant built for universities and enterprises,
+            lowering inference costs while delivering accurate, trusted answers.
             </p>
             <div className="flex space-x-4">
               <a
@@ -73,7 +74,7 @@ const Footer = () => {
               Contact
             </h3>
             <ul className="space-y-2 text-gray-400">
-              <li className="hover:text-cyan-400 transition-colors">yatharth0903@gmail.com</li>
+             
               <li className="hover:text-cyan-400 transition-colors">Privacy Policy</li>
               <li className="hover:text-cyan-400 transition-colors">Terms of Service</li>
             </ul>
@@ -81,7 +82,7 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-500">
-          <p>&copy; {currentYear} ChatPDFX. All rights reserved.</p>
+          <p>&copy; {currentYear} CortexAI. All rights reserved.</p>
         </div>
       </div>
     </footer>

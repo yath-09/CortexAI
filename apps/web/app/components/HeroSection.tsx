@@ -23,9 +23,9 @@ export const HeroSection = () => {
               className="text-4xl md:text-7xl font-bold tracking-tight"
             >
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-cyan-500">
-                Next-Gen AI
+                NextGen AI  
               </span>{" "}
-              for Smarter Document Conversations
+               to Securely Unlock Your Organization’s Knowledge
             </motion.h1>
 
             <motion.p
@@ -34,7 +34,8 @@ export const HeroSection = () => {
               transition={{ delay: 0.3, duration: 0.6 }}
               className="text-base md:text-xl text-zinc-400 max-w-2xl mx-auto"
             >
-              Upload PDFs and chat with their content using advanced AI technology.
+              A context-aware assistant built for universities and enterprises,
+              lowering inference costs while delivering accurate, trusted answers.
             </motion.p>
 
             <motion.div
@@ -81,9 +82,9 @@ export const CardContent = () => {
         >
           <FaRegFilePdf className="text-cyan-500 text-4xl" />
           <div>
-            <div className="text-cyan-500 text-2xl font-bold mb-1">Chat with PDFs</div>
+            <div className="text-cyan-500 text-2xl font-bold mb-1">Organizational Knowledge</div>
             <p className="text-zinc-300 text-lg">
-              Upload documents and have meaningful AI-driven conversations with their content.
+            Interact securely with academic and corporate documents using AI-driven conversations tailored for your institution.
             </p>
           </div>
         </motion.div>
@@ -97,9 +98,9 @@ export const CardContent = () => {
         >
           <FaBrain className="text-purple-500 text-4xl" />
           <div>
-            <div className="text-purple-500 text-2xl font-bold mb-1">AI-Powered Insights</div>
+            <div className="text-purple-500 text-2xl font-bold mb-1">Context-Aware AI Insights</div>
             <p className="text-zinc-300 text-lg">
-              Extract key information, summarize content, and get answers instantly with AI.
+            Get accurate answers, intelligent summaries, and key insights—all grounded in your organization's private data.
             </p>
           </div>
         </motion.div>

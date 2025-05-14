@@ -16,8 +16,8 @@ const geistMono = localFont({
 });
 
 export const metadata = {
-  title: 'ChatPDFX - Intelligent Document Chat Platform',
-  description: 'Upload PDFs and chat with their content using advanced AI technology.',
+  title: 'CortexAI - Securely Unlock Your Organization’s Knowledge',
+  description: 'A context-aware assistant built for universities and enterprises,lowering inference costs while delivering accurate, trusted answers.',
 };
 
 export default function RootLayout({

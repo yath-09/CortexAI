@@ -95,7 +95,7 @@ export function FocusTestimonials() {
         </h2>
         <p className="text-gray-500 dark:text-gray-400 text-center mb-12 text-lg max-w-3xl mx-auto">
           Join thousands of researchers, legal professionals, and educators who have transformed
-          their document workflows with ChatPDFX.
+          their document workflows with CortexAI.
         </p>
       </motion.div>
 

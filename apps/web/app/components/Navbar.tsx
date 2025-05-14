@@ -48,7 +48,7 @@ const Navbar = () => {
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
             <FileText className="h-8 w-8 text-purple-500" />
-            <span className={`font-bold text-xl text-white`}>ChatPDFX</span>
+            <span className={`font-bold text-2xl text-white`}>CortexAI</span>
           </Link>
 
           {/* Desktop Navigation */}

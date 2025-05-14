@@ -142,7 +142,7 @@ export class QueryService {
 
                 if (isGeneralQuery) {
                     // Predefined response for general queries
-                    const generalResponse = "Hello! I'm ChatPDFX, an AI assistant specialized in analyzing and conversing with PDF documents. I can help you extract insights, answer questions, and interact with your uploaded PDFs. How can I assist you today?";
+                    const generalResponse = "Hello! I'm CortexAI, an AI assistant specialized in analyzing and conversing with organizational private data. How can I assist you today?";
 
                     // Stream the response token by token
                     let responseText = '';

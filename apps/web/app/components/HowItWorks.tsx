@@ -5,20 +5,24 @@ import { Upload, MessageSquare, FolderOpen } from "lucide-react";
 const steps = [
   {
     icon: <Upload className="w-6 h-6 text-white" />,
-    title: "Upload Your Documents",
-    description: "Start by uploading any PDF document you'd like to analyze or extract information from.",
+    title: "Secure Data Onboarding",
+    description:
+      "Admins upload and manage documents to build a trusted knowledge base for your organization.",
   },
   {
     icon: <MessageSquare className="w-6 h-6 text-white" />,
-    title: "Chat With Your Data",
-    description: "Ask questions and get instant insights from your documents using advanced AI.",
+    title: "Chat with Organizational Knowledge",
+    description:
+      "Employees and students can securely ask questions and receive instant, context-aware answers from private data.",
   },
   {
     icon: <FolderOpen className="w-6 h-6 text-white" />,
-    title: "Manage Documents",
-    description: "Organize, search, and access all your documents in one secure location.",
+    title: "Role-Based Knowledge Control",
+    description:
+      "Admins oversee document access and AI context visibility, ensuring data privacy across the organization.",
   },
 ];
+
 
 export function HowItWorks() {
   return (
@@ -36,7 +40,7 @@ export function HowItWorks() {
           </span>
         </h2>
         <p className="text-gray-300 max-w-2xl mx-auto">
-          Extract insights from your documents and interact with your data in three simple steps.
+        Extract insights and interact with your organization's data.
         </p>
       </div>
 

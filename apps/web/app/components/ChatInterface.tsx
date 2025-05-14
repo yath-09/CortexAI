@@ -530,7 +530,7 @@ export default function ChatInterface() {
           </button>
         </div>
         <p className="text-xs text-slate-400 mt-2 text-center">
-          Answers are generated based on your document library
+          Answers are generated based on your enterprise document library
         </p>
       </form>
       {isRecentChatsModalOpen && (

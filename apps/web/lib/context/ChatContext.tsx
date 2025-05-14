@@ -27,7 +27,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     {
       id: 'welcome',
       role: 'assistant',
-      content: 'Hello! I can help answer questions about your documents. What would you like to know?',
+      content: "Hello! I'm here to help you explore and understand your organization's documents. What would you like to ask?",
       timestamp: new Date(),
     },
   ]);
@@ -57,7 +57,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       {
         id: 'welcome',
         role: 'assistant',
-        content: 'Hello! I can help answer questions about your documents. What would you like to know?',
+        content: "Hello! I'm here to help you explore and understand your organization's documents. What would you like to ask?",
         timestamp: new Date(),
       },
     ]);
