@@ -395,7 +395,7 @@ export default function DocumentManager() {
 
             {/* Document Detail Modal */}
             {isDetailModalOpen && (
-                <Overlay onClose={() => setIsDeleteModalOpen(false)}>
+                <Overlay onClose={() => setIsDetailModalOpen(false)}>
                     
                         <div className="absolute top-4 right-4">
                             <button

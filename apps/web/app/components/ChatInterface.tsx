@@ -16,6 +16,7 @@ import toast from 'react-hot-toast';
 import { FaHistory, FaSave } from 'react-icons/fa';
 import { Overlay } from './DocumentManager';
 import { FiEdit2, FiCheck, FiX } from "react-icons/fi";
+import { Loader, Trash2 } from 'lucide-react';
 
 const SparklesIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -85,7 +86,7 @@ export default function ChatInterface() {
     try {
       //first save the current and then add the other
       //await saveChatHistory()
-      const response=await chatServicee.getUserChatsById(chatId,getToken)
+      const response = await chatServicee.getUserChatsById(chatId, getToken)
 
       if (!response.ok) {
         throw new Error('Failed to load chat session');
@@ -330,12 +331,12 @@ export default function ChatInterface() {
         // Include status
         status: message.status
       }));
-      if(chatMessages &&  chatMessages.length <=1){
+      if (chatMessages && chatMessages.length <= 1) {
         toast.error("Please initiate a chat first");
         return;
       }
 
-      const response=await chatServicee.manageChatSession(currentChatSessionId,messages,getToken)
+      const response = await chatServicee.manageChatSession(currentChatSessionId, messages, getToken)
 
       if (response && response.status === 202) {
         toast.error("Please initiate a chat first");
@@ -368,20 +369,21 @@ export default function ChatInterface() {
       setIsDeletingChat(true);
       // If there's a current chat session, delete it
       if (currentChatSessionId) { //checking here only to prevent backend call and only if the use is there
-        
-        const response = await chatServicee.deleteChatSession(currentChatSessionId,getToken)
+
+        const response = await chatServicee.deleteChatSession(currentChatSessionId, getToken)
 
         if (!response.ok) {
           throw new Error('Failed to delete chat session');
         }
         await fetchRecentChats();
-        
+
       }
 
       setCurrentChatSessionId("") //making new sessions
       clearMessages();
       toast.success("Chat deleted successfully");
-     
+      setIsDeleteModalOpen(false); // Close the modal after successful deletion
+
 
     } catch (error) {
       console.error('Error deleting chat:', error);
@@ -406,13 +408,13 @@ export default function ChatInterface() {
     setEditingChatId(null);
     setEditTitle("");
   };
-  
+
   const updateChatTitle = async (chatId: string, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent chat loading when clicking save
     try {
-      const response=await chatServicee.updateChatTitle(chatId,editTitle,getToken)
+      const response = await chatServicee.updateChatTitle(chatId, editTitle, getToken)
       const data = await response.json();
-      
+
       if (data.success) {
         // Update local state with the new title
         setRecentChats(prevChats =>
@@ -430,6 +432,12 @@ export default function ChatInterface() {
       console.error("Error updating chat title:", error);
       toast.error('Error updating chat title');
     }
+  };
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  const handleDeleteClick = () => {
+    // Open the confirmation modal instead of deleting immediately
+    setIsDeleteModalOpen(true);
   };
 
   return (
@@ -460,7 +468,7 @@ export default function ChatInterface() {
             {isSavingChat ? <IoIosRefresh className="animate-spin" /> : <FaSave />}
           </button>
           <button
-            onClick={handleDelete}
+            onClick={handleDeleteClick}
             disabled={isDeletingChat || isLoading || isSavingChat}
             className={cn(
               "text-slate-400 hover:text-white transition p-1 rounded hover:bg-slate-700",
@@ -468,7 +476,16 @@ export default function ChatInterface() {
             )}
             aria-label="Clear chat"
           >
-            {isDeletingChat ? <IoIosRefresh className="animate-spin" /> : <MdDelete />}
+            {isDeletingChat ? (
+              <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            )}
           </button>
         </div>
       </div>
@@ -558,13 +575,13 @@ export default function ChatInterface() {
                             className="flex-1 bg-slate-800 text-white px-2 py-1 rounded border border-slate-600 focus:outline-none focus:ring-1 focus:ring-cyan-400"
                             autoFocus
                           />
-                          <button 
+                          <button
                             onClick={(e) => updateChatTitle(chat.id, e)}
                             className="text-green-400 hover:text-green-300 p-1"
                           >
                             <FiCheck size={16} />
                           </button>
-                          <button 
+                          <button
                             onClick={(e) => cancelEditing(e)}
                             className="text-red-400 hover:text-red-300 p-1"
                           >
@@ -574,14 +591,14 @@ export default function ChatInterface() {
                       ) : (
                         // View mode
                         <div className="flex-1 flex items-center space-x-2">
-                          <div 
+                          <div
                             onClick={() => loadChatSession(chat.id)}
                             className="flex-1 text-white cursor-pointer"
                           >
-                            {chat.title.split(" ").slice(0, 10).join(" ") + 
+                            {chat.title.split(" ").slice(0, 10).join(" ") +
                               (chat.title.split(" ").length > 10 ? "..." : "")}
                           </div>
-                          <button 
+                          <button
                             onClick={(e) => startEditing(chat, e)}
                             className="text-slate-400 hover:text-white p-1"
                           >
@@ -600,6 +617,48 @@ export default function ChatInterface() {
           </div>
         </Overlay>
       )}
+
+      {isDeleteModalOpen && (
+        <Overlay onClose={() => setIsDeleteModalOpen(false)}>
+
+          <div className="p-6">
+            <h3 className="text-xl font-bold text-red-400 mb-4">Confirm Deletion</h3>
+
+            <p className="text-slate-300 mb-6">
+              Are you sure you want to delete this document? This action will remove the document and all associated data from the database and storage.
+            </p>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setIsDeleteModalOpen(false)}
+                disabled={isDeletingChat}
+                className="px-4 py-2 rounded-md bg-slate-700 text-slate-300 hover:bg-slate-600 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={isDeletingChat}
+                className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 flex items-center"
+              >
+                {isDeletingChat ? (
+                  <>
+                    <Loader className="h-4 w-4 animate-spin mr-2" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </Overlay>
+      )}
+
+
     </div>
   );
 }
