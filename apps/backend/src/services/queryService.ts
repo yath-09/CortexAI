@@ -197,7 +197,7 @@ export class QueryService {
                 .filter((match: any) => match.metadata && match.metadata.text)
                 .map((match: any) => match.metadata.text)
                 .join("\n\n");
-            
+
             // Send status update
             res.write(`data: ${JSON.stringify({
                 type: 'status',
@@ -208,7 +208,20 @@ export class QueryService {
             const systemPrompt = this.getSystemPrompt();
 
             // Use the streaming version of the chat model
-            const userMessage = `Context Information:\n\n${relevantChunks}\n\nUser Question: ${query}\n\nProvide a clear, direct answer based only on the context above.`;
+            const userMessage = `You are an intelligent assistant for a private organization. Answer the user's question using only the information provided below.
+                            Information:
+                            ${relevantChunks}
+                            User Question:
+                            ${query}
+
+                            Instructions:
+                            - Provide a helpful and accurate answer based strictly on the information above.
+                            - If the answer is not found, politely respond with something like:
+                            - "There doesn't appear to be any information available on this topic."
+                            - "No relevant details were found to answer your question."
+                            - "We couldn't find this information at the moment."
+                            Avoid mentioning anything about 'context' or internal data processing.
+                            `;
 
             let responseText = '';
 
