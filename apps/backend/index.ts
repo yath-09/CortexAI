@@ -66,7 +66,7 @@ initPinecone()
   .then((client: any) => {
     pineconeClient = client;
     console.log("Pinecone client initialized successfully");
-    
+
     // Register routes that require pineconeClient
     app.use("/api/documents", createDocumentRoutes(pineconeClient));
     app.use("/api/query", createQueryRoutes(pineconeClient));
@@ -78,8 +78,8 @@ initPinecone()
 
 // Basic health check endpoint
 app.get("/health", (_, res) => {
-  res.json({ 
-    status: "ok", 
+  res.json({
+    status: "ok",
     pineconeStatus: pineconeClient ? "connected" : "disconnected",
     // redisStatus: redisClient.status === "ready" ? "connected" : "disconnected"
   });

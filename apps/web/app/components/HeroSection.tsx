@@ -23,9 +23,9 @@ export const HeroSection = () => {
               className="text-4xl md:text-7xl font-bold tracking-tight"
             >
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-cyan-500">
-                NextGen AI  
+                NextGen AI
               </span>{" "}
-               to Securely Unlock Your Organization’s Knowledge
+              to Securely Unlock Your Organization’s Knowledge
             </motion.h1>
 
             <motion.p
@@ -84,7 +84,7 @@ export const CardContent = () => {
           <div>
             <div className="text-cyan-500 text-2xl font-bold mb-1">Organizational Knowledge</div>
             <p className="text-zinc-300 text-lg">
-            Interact securely with academic and corporate documents using AI-driven conversations tailored for your institution.
+              Interact securely with academic and corporate documents using AI-driven conversations tailored for your institution.
             </p>
           </div>
         </motion.div>
@@ -100,7 +100,7 @@ export const CardContent = () => {
           <div>
             <div className="text-purple-500 text-2xl font-bold mb-1">Context-Aware AI Insights</div>
             <p className="text-zinc-300 text-lg">
-            Get accurate answers, intelligent summaries, and key insights—all grounded in your organization's private data.
+              Get accurate answers, intelligent summaries, and key insights—all grounded in your organization's private data.
             </p>
           </div>
         </motion.div>

@@ -17,8 +17,8 @@ const Footer = () => {
               </span>
             </div>
             <p className="text-gray-400 mb-4">
-            A context-aware assistant built for universities and enterprises,
-            lowering inference costs while delivering accurate, trusted answers.
+              A context-aware assistant built for universities and enterprises,
+              lowering inference costs while delivering accurate, trusted answers.
             </p>
             <div className="flex space-x-4">
               <a
@@ -74,7 +74,7 @@ const Footer = () => {
               Contact
             </h3>
             <ul className="space-y-2 text-gray-400">
-             
+
               <li className="hover:text-cyan-400 transition-colors">Privacy Policy</li>
               <li className="hover:text-cyan-400 transition-colors">Terms of Service</li>
             </ul>

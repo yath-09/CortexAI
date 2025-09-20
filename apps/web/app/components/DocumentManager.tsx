@@ -24,7 +24,7 @@ interface Document {
     title: string;
     filename: string;
     createdAt: string;
-    s3Url:string,
+    s3Url: string,
 }
 
 // Document detail type
@@ -54,7 +54,7 @@ export default function DocumentManager() {
         totalPages: 0,
         hasMore: false
     });
-    const {getToken}=useAuth()
+    const { getToken } = useAuth()
 
     // State for loading and error handling
     const [isLoading, setIsLoading] = useState(false);
@@ -96,9 +96,9 @@ export default function DocumentManager() {
 
             //const response = await fetch(`${BASE_URL}/api/documents/documents?${queryParams.toString()}`);
             const response = await documentService.getDocuments(
-                new URLSearchParams({ page: '1', limit: '10' }), 
+                new URLSearchParams({ page: '1', limit: '10' }),
                 getToken
-              );
+            );
             if (!response.ok) {
                 throw new Error('Failed to fetch documents');
             }
@@ -143,10 +143,10 @@ export default function DocumentManager() {
         setError(null);
 
         try {
-            const response=await documentService.deleteDocument(
-                documentToDelete, 
+            const response = await documentService.deleteDocument(
+                documentToDelete,
                 getToken
-              );
+            );
 
             if (!response.ok) {
                 throw new Error('Failed to delete document');
@@ -396,91 +396,91 @@ export default function DocumentManager() {
             {/* Document Detail Modal */}
             {isDetailModalOpen && (
                 <Overlay onClose={() => setIsDetailModalOpen(false)}>
-                    
-                        <div className="absolute top-4 right-4">
-                            <button
-                                onClick={() => setIsDetailModalOpen(false)}
-                                className="text-slate-400 hover:text-white"
-                            >
-                                <X className="h-5 w-5" />
-                            </button>
-                        </div>
 
-                        <div className="p-6">
-                            <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-cyan-400 mb-4">Document Details</h3>
+                    <div className="absolute top-4 right-4">
+                        <button
+                            onClick={() => setIsDetailModalOpen(false)}
+                            className="text-slate-400 hover:text-white"
+                        >
+                            <X className="h-5 w-5" />
+                        </button>
+                    </div>
 
-                            {isDetailLoading ? (
-                                <div className="py-12 flex justify-center">
-                                    <Loader className="h-8 w-8 animate-spin text-cyan-400" />
+                    <div className="p-6">
+                        <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-cyan-400 mb-4">Document Details</h3>
+
+                        {isDetailLoading ? (
+                            <div className="py-12 flex justify-center">
+                                <Loader className="h-8 w-8 animate-spin text-cyan-400" />
+                            </div>
+                        ) : selectedDocument ? (
+                            <div className="space-y-4">
+                                <div>
+                                    <p className="text-sm text-slate-400">Title</p>
+                                    <p className="text-lg font-medium text-white">{selectedDocument.title || 'Untitled Document'}</p>
                                 </div>
-                            ) : selectedDocument ? (
-                                <div className="space-y-4">
-                                    <div>
-                                        <p className="text-sm text-slate-400">Title</p>
-                                        <p className="text-lg font-medium text-white">{selectedDocument.title || 'Untitled Document'}</p>
-                                    </div>
 
-                                    <div>
-                                        <p className="text-sm text-slate-400">Filename</p>
-                                        <p className="text-white">{selectedDocument.filename}</p>
-                                    </div>
-
-                                    <div className="pt-4">
-                                        <a
-                                            href={selectedDocument.s3Url}
-                                            download={selectedDocument.filename}
-                                            className="flex items-center justify-center w-full bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white font-medium py-3 px-4 rounded-md transition-colors"
-                                        >
-                                            <Download className="h-5 w-5 mr-2" />
-                                            Download Document
-                                        </a>
-                                    </div>
+                                <div>
+                                    <p className="text-sm text-slate-400">Filename</p>
+                                    <p className="text-white">{selectedDocument.filename}</p>
                                 </div>
-                            ) : (
-                                <p className="text-red-400 py-4">Error loading document details</p>
-                            )}
-                        </div>
+
+                                <div className="pt-4">
+                                    <a
+                                        href={selectedDocument.s3Url}
+                                        download={selectedDocument.filename}
+                                        className="flex items-center justify-center w-full bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 text-white font-medium py-3 px-4 rounded-md transition-colors"
+                                    >
+                                        <Download className="h-5 w-5 mr-2" />
+                                        Download Document
+                                    </a>
+                                </div>
+                            </div>
+                        ) : (
+                            <p className="text-red-400 py-4">Error loading document details</p>
+                        )}
+                    </div>
                 </Overlay>
             )}
 
             {/* Delete Confirmation Modal */}
             {isDeleteModalOpen && (
                 <Overlay onClose={() => setIsDeleteModalOpen(false)}>
-                    
-                        <div className="p-6">
-                            <h3 className="text-xl font-bold text-red-400 mb-4">Confirm Deletion</h3>
 
-                            <p className="text-slate-300 mb-6">
-                                Are you sure you want to delete this document? This action will remove the document and all associated data from the database and storage.
-                            </p>
+                    <div className="p-6">
+                        <h3 className="text-xl font-bold text-red-400 mb-4">Confirm Deletion</h3>
 
-                            <div className="flex justify-end space-x-3">
-                                <button
-                                    onClick={() => setIsDeleteModalOpen(false)}
-                                    disabled={isDeleting}
-                                    className="px-4 py-2 rounded-md bg-slate-700 text-slate-300 hover:bg-slate-600 disabled:opacity-50"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={deleteDocument}
-                                    disabled={isDeleting}
-                                    className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 flex items-center"
-                                >
-                                    {isDeleting ? (
-                                        <>
-                                            <Loader className="h-4 w-4 animate-spin mr-2" />
-                                            Deleting...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Trash2 className="h-4 w-4 mr-2" />
-                                            Delete
-                                        </>
-                                    )}
-                                </button>
-                            </div>
+                        <p className="text-slate-300 mb-6">
+                            Are you sure you want to delete this document? This action will remove the document and all associated data from the database and storage.
+                        </p>
+
+                        <div className="flex justify-end space-x-3">
+                            <button
+                                onClick={() => setIsDeleteModalOpen(false)}
+                                disabled={isDeleting}
+                                className="px-4 py-2 rounded-md bg-slate-700 text-slate-300 hover:bg-slate-600 disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={deleteDocument}
+                                disabled={isDeleting}
+                                className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 flex items-center"
+                            >
+                                {isDeleting ? (
+                                    <>
+                                        <Loader className="h-4 w-4 animate-spin mr-2" />
+                                        Deleting...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Trash2 className="h-4 w-4 mr-2" />
+                                        Delete
+                                    </>
+                                )}
+                            </button>
                         </div>
+                    </div>
                 </Overlay>
             )}
         </div>
@@ -494,27 +494,27 @@ interface OverlayProps {
 
 export function Overlay({ children, onClose }: OverlayProps) {
     useEffect(() => {
-      // Disable scrolling on mount
-      document.body.style.overflow = "hidden";
-  
-      return () => {
-        // Re-enable scrolling when unmounted
-        document.body.style.overflow = "";
-      };
+        // Disable scrolling on mount
+        document.body.style.overflow = "hidden";
+
+        return () => {
+            // Re-enable scrolling when unmounted
+            document.body.style.overflow = "";
+        };
     }, []);
-  
+
     return (
-      <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center min-h-screen p-4">
-        {/* Background Overlay with Blur */}
-        <div
-          className="fixed inset-0 bg-opacity-50 backdrop-blur-sm transition-opacity"
-          onClick={onClose}
-        ></div>
-  
-        {/* Modal Content */}
-        <div className="relative bg-slate-800 rounded-lg max-w-md w-full mx-auto shadow-xl border border-slate-700">
-          {children}
+        <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center min-h-screen p-4">
+            {/* Background Overlay with Blur */}
+            <div
+                className="fixed inset-0 bg-opacity-50 backdrop-blur-sm transition-opacity"
+                onClick={onClose}
+            ></div>
+
+            {/* Modal Content */}
+            <div className="relative bg-slate-800 rounded-lg max-w-md w-full mx-auto shadow-xl border border-slate-700">
+                {children}
+            </div>
         </div>
-      </div>
     );
-  }
+}

@@ -40,7 +40,7 @@ export default function PdfUpload() {
       setUploadStatus(null);
     }
   };
-  
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,11 +54,11 @@ export default function PdfUpload() {
 
     setIsUploading(true);
     setUploadProgress(0);
-    
+
     // Create form data
     const formData = new FormData();
     formData.append('file', file);
-    
+
     // Add metadata if provided
     if (metadata.trim()) {
       try {
@@ -85,12 +85,12 @@ export default function PdfUpload() {
           return newProgress;
         });
       }, 400);
-    
+
       // Call the API
       const response = await documentService.uploadDocument(formData, getToken);
       // Clear progress interval
       clearInterval(progressInterval);
-    
+
       if (response.ok) {
         const result = await response.json();
         setUploadProgress(100);
@@ -98,7 +98,7 @@ export default function PdfUpload() {
           message: 'Document uploaded successfully!',
           isError: false
         });
-    
+
         // Reset form after successful upload
         setTimeout(() => {
           setFile(null);
@@ -114,7 +114,7 @@ export default function PdfUpload() {
         } catch {
           // If response is not JSON, use default error message
         }
-    
+
         setUploadStatus({
           message: errorMessage,
           isError: true
@@ -135,10 +135,10 @@ export default function PdfUpload() {
     <div className="w-full md:max-w-2xl mx-auto px-4">
       <div className="bg-slate-800 bg-opacity-50 backdrop-blur-sm rounded-lg p-6 shadow-xl border border-slate-700">
         <h2 className="text-3xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-cyan-400">Upload Document</h2>
-        
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* File Upload Area */}
-          <div 
+          <div
             className={`
               border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all
               ${file ? 'border-cyan-400 bg-slate-800 bg-opacity-40' : 'border-slate-600 hover:border-slate-400'}
@@ -152,7 +152,7 @@ export default function PdfUpload() {
                 <p className="text-slate-400 text-sm mt-1">
                   {(file.size / (1024 * 1024)).toFixed(2)} MB
                 </p>
-                <button 
+                <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -211,9 +211,9 @@ export default function PdfUpload() {
           )}
 
           {/* Progress Bar */}
-          {uploadProgress > 0 && isUploading &&  (
+          {uploadProgress > 0 && isUploading && (
             <div className="w-full bg-slate-700 rounded-full h-2.5 overflow-hidden">
-              <div 
+              <div
                 className="bg-gradient-to-r from-cyan-500 to-purple-500 h-2.5 rounded-full transition-all duration-300"
                 style={{ width: `${uploadProgress}%` }}
               />

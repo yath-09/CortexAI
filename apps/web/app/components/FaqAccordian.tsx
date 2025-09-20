@@ -9,15 +9,14 @@ const FAQItem = ({ question, answer }: { question: string; answer: string }) => 
 
   return (
     <div className="border-b border-gray-700 bg-zinc-900">
-      <button 
+      <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex justify-between items-center p-6 text-left focus:outline-none"
       >
         <span className="text-white text-lg font-semibold">{question}</span>
-        <ChevronDown 
-          className={`w-6 h-6 text-white transition-transform duration-300 ${
-            isOpen ? 'rotate-180' : ''
-          }`} 
+        <ChevronDown
+          className={`w-6 h-6 text-white transition-transform duration-300 ${isOpen ? 'rotate-180' : ''
+            }`}
         />
       </button>
       <AnimatePresence>
@@ -43,7 +42,7 @@ export function FAQAccordian() {
 
   return (
     <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 md:pb-20 bg-gradient-to-b from-gray-50 to-black py-12 dark:from-zinc-900 dark:to-black">
-      <motion.div 
+      <motion.div
         whileInView={{ opacity: 1, y: 0 }}
         initial={{ opacity: 0, y: 50 }}
         transition={{ duration: 0.8, delay: 0.3 }}
@@ -61,18 +60,18 @@ export function FAQAccordian() {
         </p>
       </motion.div>
       <motion.div
-      whileInView={{ opacity: 1, y: 0 }}
-      initial={{ opacity: 0, y: 50 }}
-      transition={{ duration: 0.8, delay: 0.3 }}
-      viewport={{ once: false, amount: 0.2 }}
-      className="border-b border-gray-700 bg-zinc-900 rounded-xl overflow-hidden border max-w-7xl mx-auto"
-    >
-      
+        whileInView={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, y: 50 }}
+        transition={{ duration: 0.8, delay: 0.3 }}
+        viewport={{ once: false, amount: 0.2 }}
+        className="border-b border-gray-700 bg-zinc-900 rounded-xl overflow-hidden border max-w-7xl mx-auto"
+      >
+
         {faqs.map((faq, index) => (
-          <FAQItem 
-            key={index} 
-            question={faq.question} 
-            answer={faq.answer} 
+          <FAQItem
+            key={index}
+            question={faq.question}
+            answer={faq.answer}
           />
         ))}
       </motion.div>

@@ -13,7 +13,7 @@ const Navbar = () => {
   const { getToken } = useAuth()
   const getUser = async () => {
     const token = await getToken();
-    if (!token) return; 
+    if (!token) return;
     const response = await documentService.getRole(
       getToken
     );

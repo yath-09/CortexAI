@@ -36,11 +36,11 @@ export function HowItWorks() {
         <h2 className="text-3xl md:text-4xl font-bold text-white">
           How It {" "}
           <span className="bg-gradient-to-r from-purple-500 to-cyan-500 bg-clip-text text-transparent">
-             Works
+            Works
           </span>
         </h2>
         <p className="text-gray-300 max-w-2xl mx-auto">
-        Extract insights and interact with your organization's data.
+          Extract insights and interact with your organization's data.
         </p>
       </div>
 
